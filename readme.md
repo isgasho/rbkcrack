@@ -6,19 +6,16 @@ Crack legacy zip encryption with Biham and Kocher's known plaintext attack.
 Download
 --------
 
-Get the latest version from the [git repository](https://github.com/kimci86/bkcrack).
+Get the latest version from the [git repository](https://github.com/Aloxaf/bkcrack).
 
 Install
 -------
 
-Build and install it with [CMake](https://cmake.org).
+Build and install it with [Cargo](https://doc.rust-lang.org/cargo).
 
-The following options can be configured:
-
-- `CMAKE_INSTALL_PREFIX`: Install path prefix, prepended onto install directories.
-- `CMAKE_BUILD_TYPE`: Type of build (Debug or Release).
-- `PARALLEL_MODE`: Enable multithreaded attack with [OpenMP](http://openmp.org). This requires a compiler that supports OpenMP.
-- `BUILD_DOC`: Enable documentation generation with [doxygen](http://doxygen.org).
+```shell
+cargo install --git https://github.com/Aloxaf/bkcrack
+```
 
 Usage
 -----
