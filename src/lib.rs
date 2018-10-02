@@ -1,4 +1,5 @@
-#[macro_use] extern crate failure;
+#[macro_use]
+extern crate failure;
 
 mod attack;
 mod crc32_tab;
@@ -24,14 +25,21 @@ mod tests {
     #[test]
     #[ignore]
     fn crack() {
-        let data = Data::new("./example/cipher.zip", "file", "./example/plain.zip", "file", 0).unwrap();
+        let data = Data::new(
+            "./example/cipher.zip",
+            "file",
+            "./example/plain.zip",
+            "file",
+            0,
+        )
+        .unwrap();
 
         let mut zr = Zreduction::new(&data.keystream);
         zr.generate();
         zr.reduce();
-        
+
         let mut attack = Attack::new(&data, zr.get_index() - 11);
-        for it in zr.zi_2_32_vector {
+        for &it in zr.get_zi_2_32_vector() {
             if attack.carry_out(it) {
                 println!("\nfound!");
                 break;

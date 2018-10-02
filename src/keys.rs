@@ -47,7 +47,9 @@ impl Keys {
     pub fn update_backword(&mut self, c: u8) {
         self.z = self.crc32tab.crc32inv(self.z, msb(self.y));
         self.y = (self.y - 1) * MultTab::MULTINV - u32::from(lsb(self.x));
-        self.x = self.crc32tab.crc32inv(self.x, c ^ self.keystream.get_byte(self.z));
+        self.x = self
+            .crc32tab
+            .crc32inv(self.x, c ^ self.keystream.get_byte(self.z));
     }
 
     /// return X value

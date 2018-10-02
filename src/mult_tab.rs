@@ -2,7 +2,6 @@ use super::utils::*;
 
 /// Lookup tables for multiplication related computations
 pub struct MultTab {
-
     // lookup tables
     _multtab: [u32; 256],
     multinvtab: [u32; 256],
@@ -18,8 +17,8 @@ impl MultTab {
         let mut multtab = MultTab {
             _multtab: [0; 256],
             multinvtab: [0; 256],
-            msbprodfiber2: (0..256).map(|_|vec![0u8]).collect::<Vec<_>>(),
-            msbprodfiber3: (0..256).map(|_|vec![0u8]).collect::<Vec<_>>(),
+            msbprodfiber2: (0..256).map(|_| vec![0u8]).collect::<Vec<_>>(),
+            msbprodfiber3: (0..256).map(|_| vec![0u8]).collect::<Vec<_>>(),
         };
         let mut prodinv = 0;
         for x in 0..256 {

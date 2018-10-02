@@ -1,8 +1,7 @@
+use failure::Error;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
-use std::process;
-use failure::Error;
 
 fn read<T>(stream: &mut File, x: &mut T) -> Result<(), Error> {
     let size = std::mem::size_of::<T>();
@@ -10,26 +9,29 @@ fn read<T>(stream: &mut File, x: &mut T) -> Result<(), Error> {
         1 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 1]) };
             stream.read_exact(x)?;
-        },
+        }
         2 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 2]) };
             stream.read_exact(x)?;
-        },
+        }
         4 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 4]) };
             stream.read_exact(x)?;
-        },
+        }
         8 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 8]) };
             stream.read_exact(x)?;
-        },
+        }
         _ => (),
     }
     Ok(())
 }
 
 pub fn load_stream(is: &File, size: usize) -> Vec<u8> {
-    is.take(size as u64).bytes().map(|c|c.unwrap()).collect::<Vec<_>>()
+    is.take(size as u64)
+        .bytes()
+        .map(|c| c.unwrap())
+        .collect::<Vec<_>>()
 }
 
 pub fn load_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
@@ -39,7 +41,7 @@ pub fn load_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
 
 pub fn load_zip_entry(archivename: &str, entryname: &str, size: usize) -> Result<Vec<u8>, Error> {
     let mut entrysize = 0usize;
-    let is = open_input_zip_entry(archivename, entryname, &mut entrysize).unwrap();
+    let is = open_input_zip_entry(archivename, entryname, &mut entrysize)?;
     Ok(load_stream(&is, entrysize.min(size)))
 }
 
@@ -47,7 +49,11 @@ pub fn open_input(filename: &str) -> Result<File, Error> {
     Ok(File::open(filename)?)
 }
 
-pub fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> Result<File, Error> {
+pub fn open_input_zip_entry(
+    archivename: &str,
+    entryname: &str,
+    size: &mut usize,
+) -> Result<File, Error> {
     let mut is = open_input(archivename)?;
 
     // look for end of central directory
@@ -93,17 +99,17 @@ pub fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize
         //println!("{} {} {}", name, is.seek(io::SeekFrom::Current(0))?, eocdoffset);
     }
 
-    // TODO: 应该要抛个异常
     if name != entryname {
-        eprintln!("Could not find {}  in archive {}", entryname, archivename);
-        process::exit(1);
+        return Err(format_err!("Could not find '{}' in archive '{}'", entryname, archivename));
     }
 
     // read local file header
     let mut extra_size = 0u16;
     is.seek(io::SeekFrom::Start(u64::from(offset) + 28))?;
     read(&mut is, &mut extra_size)?;
-    is.seek(io::SeekFrom::Current(name.len() as i64 + i64::from(extra_size)))?;
+    is.seek(io::SeekFrom::Current(
+        name.len() as i64 + i64::from(extra_size),
+    ))?;
 
     *size = compressed_size as usize;
 
@@ -113,4 +119,3 @@ pub fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize
 pub fn open_output(filename: &str) -> Result<File, Error> {
     Ok(File::create(filename)?)
 }
-

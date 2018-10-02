@@ -5,15 +5,13 @@ use std::mem;
 
 pub struct Zreduction<'a> {
     keystream: &'a [u8],
-    pub zi_2_32_vector: Vec<u32>,
+    zi_2_32_vector: Vec<u32>,
     index: usize,
     keystreamtab: KeystreamTab,
     crc32tab: Crc32Tab,
 }
 
-
 impl<'a> Zreduction<'a> {
-
     // TODO: 自定义 WAIT_SIZE
     const WAIT_SIZE: usize = 1 << 8;
     const TRACK_SIZE: usize = 1 << 16;
@@ -32,8 +30,12 @@ impl<'a> Zreduction<'a> {
         self.index = self.keystream.len();
         self.zi_2_32_vector.reserve(1 << 22);
 
-        for &zi_2_16 in self.keystreamtab.get_zi_2_16_array(*self.keystream.last().unwrap()).iter() {
-            for high in 0..(1<<16) {
+        for &zi_2_16 in self
+            .keystreamtab
+            .get_zi_2_16_array(*self.keystream.last().unwrap())
+            .iter()
+        {
+            for high in 0..(1 << 16) {
                 self.zi_2_32_vector.push(high << 16 | zi_2_16);
             }
         }
@@ -58,7 +60,10 @@ impl<'a> Zreduction<'a> {
                 let zim1_10_32 = self.crc32tab.get_zim1_10_32(zi_2_32);
 
                 // get Z{i-1}[2,16) values from keystream byte k{i-1} and Z{i-1}[10,16)
-                for &zim1_2_16 in self.keystreamtab.get_zi_2_16_vector(self.keystream[i-1], zim1_10_32) {
+                for &zim1_2_16 in self
+                    .keystreamtab
+                    .get_zi_2_16_vector(self.keystream[i - 1], zim1_10_32)
+                {
                     //println!("({} {})", zi_2_32, zim1_10_32);
                     zim1_2_32_vector.push(zim1_10_32 | zim1_2_16);
                 }
@@ -75,8 +80,10 @@ impl<'a> Zreduction<'a> {
                 best_index = i - 1;
                 best_size = zim1_2_32_vector.len();
                 waiting = false;
-            } else if tracking { // vector is bigger than bestSize
-                if best_index == i { // hit a minimum
+            } else if tracking {
+                // vector is bigger than bestSize
+                if best_index == i {
+                    // hit a minimum
                     // keep a copy of the vector because size is about to grow
                     best_copy = self.zi_2_32_vector.clone();
 
@@ -98,7 +105,12 @@ impl<'a> Zreduction<'a> {
             // self.zi_2_32_vector = zim1_2_32_vector;
             let now = self.keystream.len() - i;
             let total = self.keystream.len() - Attack::SIZE;
-            print!("\r{:.2} % ({} / {})", now as f32 / total as f32 * 100.0, now, total);
+            print!(
+                "\r{:.2} % ({} / {})",
+                now as f32 / total as f32 * 100.0,
+                now,
+                total
+            );
         }
 
         if tracking {
@@ -119,5 +131,9 @@ impl<'a> Zreduction<'a> {
 
     pub fn get_index(&self) -> usize {
         self.index
+    }
+
+    pub fn get_zi_2_32_vector(&self) -> &Vec<u32> {
+        &self.zi_2_32_vector
     }
 }
