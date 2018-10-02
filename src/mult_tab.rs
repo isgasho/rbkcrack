@@ -4,19 +4,19 @@ use super::utils::*;
 pub struct MultTab {
 
     // lookup tables
-    multtab: [u32; 256],
+    _multtab: [u32; 256],
     multinvtab: [u32; 256],
     msbprodfiber2: Vec<Vec<u8>>, //[Vec<u8>; 256],
     msbprodfiber3: Vec<Vec<u8>>, //[Vec<u8>; 256],
 }
 
 impl MultTab {
-    pub const MULT: u32 = 0x08088405;
-    pub const MULTINV: u32 = 0xd94fa8cd;
+    pub const MULT: u32 = 0x0808_8405;
+    pub const MULTINV: u32 = 0xd94f_a8cd;
 
     pub fn new() -> MultTab {
         let mut multtab = MultTab {
-            multtab: [0; 256],
+            _multtab: [0; 256],
             multinvtab: [0; 256],
             msbprodfiber2: (0..256).map(|_|vec![0u8]).collect::<Vec<_>>(),
             msbprodfiber3: (0..256).map(|_|vec![0u8]).collect::<Vec<_>>(),

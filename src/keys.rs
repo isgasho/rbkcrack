@@ -12,13 +12,19 @@ pub struct Keys {
     keystream: KeystreamTab,
 }
 
+impl Default for Keys {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Keys {
     /// Constructor
     pub fn new() -> Keys {
         Keys {
-            x: 0x12345678,
-            y: 0x23456789,
-            z: 0x34567890,
+            x: 0x1234_5678,
+            y: 0x2345_6789,
+            z: 0x3456_7890,
             crc32tab: Crc32Tab::new(),
             keystream: KeystreamTab::new(),
         }
@@ -33,14 +39,14 @@ impl Keys {
     /// Update the state with a plaintext byte
     pub fn update(&mut self, p: u8) {
         self.x = self.crc32tab.crc32(self.x, p);
-        self.y = (self.y + lsb(self.x) as u32) * MultTab::MULT + 1;
+        self.y = (self.y + u32::from(lsb(self.x))) * MultTab::MULT + 1;
         self.z = self.crc32tab.crc32(self.z, msb(self.y));
     }
 
     /// Update the state backward with a ciphertext byte
     pub fn update_backword(&mut self, c: u8) {
         self.z = self.crc32tab.crc32inv(self.z, msb(self.y));
-        self.y = (self.y - 1) * MultTab::MULTINV - lsb(self.x) as u32;
+        self.y = (self.y - 1) * MultTab::MULTINV - u32::from(lsb(self.x));
         self.x = self.crc32tab.crc32inv(self.x, c ^ self.keystream.get_byte(self.z));
     }
 
@@ -57,5 +63,16 @@ impl Keys {
     /// return Z value
     pub fn get_z(&self) -> u32 {
         self.z
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Keys;
+
+    #[test]
+    fn update() {
+        let key: Keys = Default::default();
+        // TODO: Finish this
     }
 }

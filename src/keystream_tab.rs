@@ -4,7 +4,7 @@ use super::utils::*;
 pub struct KeystreamTab {
     keystreamtab: [u8; 1 << 14],
     keystreaminvtab: [[u32; 64]; 256],
-    keystreaminvfiltertab: Vec<Vec<Vec<u32>>>//[[Vec<u32>; 64]; 256]
+    keystreaminvfiltertab: Vec<Vec<Vec<u32>>>, //[[Vec<u32>; 64]; 256]
 }
 
 impl KeystreamTab {
@@ -17,7 +17,7 @@ impl KeystreamTab {
 
         let mut next = [0; 256];
         for z_2_16 in (0..1<<16).step_by(4) {
-            let k = lsb((z_2_16 | 2) * (z_2_16 | 3) >> 8);
+            let k = lsb(((z_2_16 | 2) * (z_2_16 | 3)) >> 8);
             keystreamtab.keystreamtab[(z_2_16 >> 2) as usize] = k;
             keystreamtab.keystreaminvtab[k as usize][next[k as usize]] = z_2_16;
             keystreamtab.keystreaminvfiltertab[k as usize][(z_2_16 >> 10) as usize].push(z_2_16);

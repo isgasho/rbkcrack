@@ -4,7 +4,7 @@ use super::keystream_tab::KeystreamTab;
 use std::mem;
 
 pub struct Zreduction<'a> {
-    keystream: &'a Vec<u8>,
+    keystream: &'a [u8],
     pub zi_2_32_vector: Vec<u32>,
     index: usize,
     keystreamtab: KeystreamTab,
@@ -17,7 +17,7 @@ impl<'a> Zreduction<'a> {
     const WAIT_SIZE: usize = 1 << 8;
     const TRACK_SIZE: usize = 1 << 16;
 
-    pub fn new(keystream: &Vec<u8>) -> Zreduction {
+    pub fn new(keystream: &[u8]) -> Zreduction {
         Zreduction {
             zi_2_32_vector: Vec::new(),
             keystream,

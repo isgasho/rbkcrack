@@ -76,7 +76,7 @@ impl<'a> Attack<'a> {
                 }
             }
             // println!("{}: 1 false", i);
-            return false;
+            false
         } else { // the Z-list is complete so iterate over possible Y values
 
             // guess Y11[8,24) and keep prod == (Y11[8,32) - 1) * mult^-1
@@ -86,7 +86,7 @@ impl<'a> Attack<'a> {
                 for y11_0_8 in self.multtab.get_msb_prod_fiber3(msb(self.y_list[10]).wrapping_sub(msb(prod))) {
                     // filter Y11[0,8) using Y10[24,32)
                     if prod + self.multtab.get_multinv(y11_0_8) - (self.y_list[10] & MASK_24_32) <= MAXDIFF_0_24 {
-                        self.y_list[11] = y11_0_8 as u32 | y11_8_24 | (self.y_list[11] & MASK_24_32);
+                        self.y_list[11] = u32::from(y11_0_8) | y11_8_24 | (self.y_list[11] & MASK_24_32);
                         if self.explore_y_lists(11) {
                             // println!("{}: 2 true", i);
                             return true;
@@ -97,7 +97,7 @@ impl<'a> Attack<'a> {
                 prod = prod.wrapping_add(MultTab::MULTINV << 8);
             }
             // println!("{}: 2 false", i);
-            return false;
+            false
         }
     }
 
@@ -110,7 +110,7 @@ impl<'a> Attack<'a> {
             // get possible LSB(Xi)
             for xi_0_8 in self.multtab.get_msb_prod_fiber2(msb(ffy.wrapping_sub(self.y_list[i-2] & MASK_24_32))) {
                 // compute corresponding Y{i-1}
-                let yim1 = fy - xi_0_8 as u32;
+                let yim1 = fy - u32::from(xi_0_8);
 
                 // filter values with Y{i-2}[24,32)
                 if ffy.wrapping_sub(self.multtab.get_multinv(xi_0_8)).wrapping_sub(self.y_list[i-2] & MASK_24_32) <= MAXDIFF_0_24
@@ -119,7 +119,7 @@ impl<'a> Attack<'a> {
                     self.y_list[i as usize - 1] = yim1;
 
                     // set Xi value
-                    self.x_list[i as usize] = xi_0_8 as u32;
+                    self.x_list[i as usize] = u32::from(xi_0_8);
 
                     if self.explore_y_lists(i as i32 - 1) {
                         return true;
@@ -127,9 +127,9 @@ impl<'a> Attack<'a> {
                 }
             }
 
-            return false;
+            false
         } else {
-            return self.test_x_list();
+            self.test_x_list()
         }
     }
 
@@ -138,7 +138,7 @@ impl<'a> Attack<'a> {
         for i in 5..=7 {
             self.x_list[i] = (self.crc32tab.crc32(self.x_list[i-1], self.data.plaintext[self.index+i-1])
                 & MASK_8_32) // discard the LSB
-                | lsb(self.x_list[i]) as u32; // set the LSB
+                | u32::from(lsb(self.x_list[i])); // set the LSB
         }
 
         let mut x = self.x_list[7];
@@ -160,13 +160,13 @@ impl<'a> Attack<'a> {
 
         // check that X3 fits with Y1[26,32)
         let y1_26_32 = self.crc32tab.get_yi_24_32(self.z_list[1], self.z_list[0]) & MASK_26_32;
-        if ((self.y_list[3] - 1) * MultTab::MULTINV - lsb(x) as u32 - 1) * MultTab::MULTINV - y1_26_32 > MAXDIFF_0_26 {
+        if ((self.y_list[3] - 1) * MultTab::MULTINV - u32::from(lsb(x)) - 1) * MultTab::MULTINV - y1_26_32 > MAXDIFF_0_26 {
             //println!("5");
             return false;
         }
 
         // all tests passed so the keys are found
-        return true;
+        true
     }
 }
 
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn test_x_list() {
-        let mut data = Data::new();
+        let mut data: Data = Default::default();
         data.offset = 0;
         data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
         let mut attack = Attack::new(&data, 735115);
@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn explore_y_list() {
-        let mut data = Data::new();
+        let mut data: Data = Default::default();
         data.offset = 0;
         data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
         let mut attack = Attack::new(&data, 735115);
@@ -199,5 +199,22 @@ mod tests {
         attack.z_list = [1092480552, 2001087864, 2524901027, 1811754778, 3216743481, 3305472034, 3752192579, 1744967186, 3351227042, 4039650542, 237715486, 282349850, ];
 
         assert_eq!(true, attack.explore_y_lists(11));
+    }
+
+    #[test]
+    fn get_keys() {
+        let mut data: Data = Default::default();
+        data.offset = 0;
+        data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
+        let mut attack = Attack::new(&data, 735115);
+        attack.x_list[7] = 2807276851;
+        attack.y_list[7] = 2433410890;
+        attack.z_list[7] = 1744967186;
+
+        let keys = attack.get_keys();
+
+        assert_eq!(0x8879dfed, keys.get_x());
+        assert_eq!(0x14335b6b, keys.get_y());
+        assert_eq!(0x8dc58b53, keys.get_z());
     }
 }

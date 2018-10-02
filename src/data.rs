@@ -2,6 +2,7 @@ use super::attack::*;
 use super::failure::Error;
 use super::file::*;
 
+#[derive(Default)]
 pub struct Data {
     pub ciphertext: Vec<u8>,
     pub plaintext: Vec<u8>,
@@ -10,15 +11,6 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn new() -> Data {
-        Data {
-            ciphertext: Vec::new(),
-            plaintext: Vec::new(),
-            keystream: Vec::new(),
-            offset: 0,
-        }
-    }
-
     pub const HEADER_SIZE: usize = 12;
 
     pub fn load(

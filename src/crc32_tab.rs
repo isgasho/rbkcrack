@@ -7,7 +7,7 @@ pub struct Crc32Tab {
 }
 
 impl Crc32Tab {
-    const CRCPOL: u32 = 0xedb88320;
+    const CRCPOL: u32 = 0xedb8_8320;
 
     // TODO: CrcTab 应该是个"常量"?
     pub fn new() -> Crc32Tab {
@@ -43,7 +43,7 @@ impl Crc32Tab {
 
     /// return CRC32^-1 using a lookup table
     pub fn crc32inv(&self, crc: u32, b: u8) -> u32 {
-        crc << 8 ^ self.crcinvtab[msb(crc) as usize] ^ b as u32
+        crc << 8 ^ self.crcinvtab[msb(crc) as usize] ^ u32::from(b)
     }
 
     /// return Yi[24,32) from Zi and Z{i-1} using CRC32^-1
