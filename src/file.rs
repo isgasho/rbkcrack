@@ -2,9 +2,10 @@ use failure::Error;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
+use std::mem;
 
 fn read<T>(stream: &mut File, x: &mut T) -> Result<(), Error> {
-    let size = std::mem::size_of::<T>();
+    let size = mem::size_of::<T>();
     match size {
         1 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 1]) };
@@ -100,7 +101,11 @@ pub fn open_input_zip_entry(
     }
 
     if name != entryname {
-        return Err(format_err!("Could not find '{}' in archive '{}'", entryname, archivename));
+        return Err(format_err!(
+            "Could not find '{}' in archive '{}'",
+            entryname,
+            archivename
+        ));
     }
 
     // read local file header

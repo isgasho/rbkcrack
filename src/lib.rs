@@ -18,6 +18,16 @@ pub use self::keys::Keys;
 pub use self::keystream_tab::KeystreamTab;
 pub use self::zreduction::Zreduction;
 
+#[inline]
+pub fn progress(done: usize, total: usize) {
+    print!(
+        "\r{:.2} % ({} / {})",
+        done as f32 / total as f32 * 100.0,
+        done,
+        total
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Attack, Data, Zreduction};
