@@ -2,25 +2,24 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::process;
-use std::mem;
 
 fn read<T>(stream: &mut File, x: &mut T) {
-    let size = mem::size_of::<T>();
+    let size = std::mem::size_of::<T>();
     match size {
         1 => {
-            let x = unsafe { mem::transmute::<&mut T, &mut [u8; 1]>(x) };
+            let x = unsafe { &mut *(x as *mut T as *mut [u8; 1]) };
             stream.read_exact(x).unwrap();
         },
         2 => {
-            let x = unsafe { mem::transmute::<&mut T, &mut [u8; 2]>(x) };
+            let x = unsafe { &mut *(x as *mut T as *mut [u8; 2]) };
             stream.read_exact(x).unwrap();
         },
         4 => {
-            let x = unsafe { mem::transmute::<&mut T, &mut [u8; 4]>(x) };
+            let x = unsafe { &mut *(x as *mut T as *mut [u8; 4]) };
             stream.read_exact(x).unwrap();
         },
         8 => {
-            let x = unsafe { mem::transmute::<&mut T, &mut [u8; 8]>(x) };
+            let x = unsafe { &mut *(x as *mut T as *mut [u8; 8]) };
             stream.read_exact(x).unwrap();
         },
         _ => (),
@@ -43,11 +42,10 @@ pub fn load_zip_entry(archivename: &str, entryname: &str, size: usize) -> Vec<u8
 }
 
 fn open_input(filename: &str) -> File {
-    let file = File::open(filename).unwrap_or_else(|e| {
+    File::open(filename).unwrap_or_else(|e| {
         eprintln!("Could not open input file: {}", e);
         process::exit(1);
-    });
-    file
+    })
 }
 
 fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> File {
@@ -58,7 +56,7 @@ fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) ->
     let mut sig = 0u32;
     read(&mut is, &mut sig);
     is.seek(io::SeekFrom::Current(-4)).unwrap();
-    while sig != 0x06054b50 {
+    while sig != 0x0605_4b50 {
         is.seek(io::SeekFrom::Current(-1)).unwrap();
         read(&mut is, &mut sig);
         is.seek(io::SeekFrom::Current(-4)).unwrap();
@@ -72,11 +70,11 @@ fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) ->
     read(&mut is, &mut cdoffset);
 
     // iterate on each entry
-    is.seek(io::SeekFrom::Start(cdoffset as u64)).unwrap();
+    is.seek(io::SeekFrom::Start(u64::from(cdoffset))).unwrap();
     let mut name = String::new();
     let (mut compressed_size, mut offset) = (0u32, 0u32);
 
-    while &name != entryname && is.seek(io::SeekFrom::Current(0)).unwrap() != eocdoffset {
+    while name != entryname && is.seek(io::SeekFrom::Current(0)).unwrap() != eocdoffset {
         let (mut name_size, mut extra_size, mut comment_size): (u16, u16, u16) = (0, 0, 0);
 
         is.seek(io::SeekFrom::Current(20)).unwrap();
@@ -90,7 +88,7 @@ fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) ->
 
         let mut bytes = vec![0u8; name_size as usize];
         is.read_exact(&mut bytes).unwrap();
-        is.seek(io::SeekFrom::Current((extra_size + comment_size) as i64)).unwrap();
+        is.seek(io::SeekFrom::Current(i64::from(extra_size + comment_size))).unwrap();
 
         name = bytes.iter().map(|&b| b as char).collect::<String>();
         //println!("{} {} {}", name, is.seek(io::SeekFrom::Current(0)).unwrap(), eocdoffset);
@@ -105,9 +103,9 @@ fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) ->
 
     // read local file header
     let mut extra_size = 0u16;
-    is.seek(io::SeekFrom::Start(offset as u64 + 28)).unwrap();
+    is.seek(io::SeekFrom::Start(u64::from(offset) + 28)).unwrap();
     read(&mut is, &mut extra_size);
-    is.seek(io::SeekFrom::Current(name.len() as i64 + extra_size as i64)).unwrap();
+    is.seek(io::SeekFrom::Current(name.len() as i64 + i64::from(extra_size))).unwrap();
 
     *size = compressed_size as usize;
 

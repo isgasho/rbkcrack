@@ -21,7 +21,7 @@ fn main() {
     let plainfile = matches.value_of("plainfile").unwrap();
 
     // load data
-    let mut data = Data::new();
+    let mut data: Data = Default::default();
     data.load(cipherarchive, cipherfile, plainarchive, plainfile).unwrap();
 
     // generate and reduce Zi[2,32) values

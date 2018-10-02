@@ -19,8 +19,9 @@ mod tests {
     use super::{Attack, Data, Zreduction};
 
     #[test]
+    #[ignore]
     fn crack() {
-        let mut data = Data::new();
+        let mut data: Data = Default::default();
         data.offset = 0;
         data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
 
