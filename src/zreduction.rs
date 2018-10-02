@@ -14,6 +14,7 @@ pub struct Zreduction<'a> {
 
 impl<'a> Zreduction<'a> {
 
+    // TODO: 自定义 WAIT_SIZE
     const WAIT_SIZE: usize = 1 << 8;
     const TRACK_SIZE: usize = 1 << 16;
 

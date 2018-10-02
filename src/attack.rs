@@ -40,7 +40,7 @@ impl<'a> Attack<'a> {
         keys.set_keys(self.x_list[7], self.y_list[7], self.z_list[7]);
 
         // println!("({})", self.data.ciphertext[0]);
-        for &i in self.data.ciphertext[0..(Data::HEADER_SIZE + self.data.offset as usize + self.index + 7 - 1)].iter().rev() {
+        for &i in self.data.ciphertext[0..(Data::HEADER_SIZE + self.data.offset as usize + self.index + 7)].iter().rev() {
             // println!("{}", i);
             keys.update_backword(i);
         }
@@ -177,9 +177,7 @@ mod tests {
 
     #[test]
     fn test_x_list() {
-        let mut data: Data = Default::default();
-        data.offset = 0;
-        data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
+        let data = Data::new("./example/cipher.zip", "file", "./example/plain.zip", "file", 0).unwrap();
         let mut attack = Attack::new(&data, 735115);
         attack.x_list = [2, 64, 347029520, 21996, 207, 3988292578, 881025314, 2807276851, 77, 60, 9, 187, ];
         attack.y_list = [64, 64, 838860800, 4085658340, 702500480, 2170229995, 2383027522, 2433410890, 1767399924, 853191409, 3862839011, 2230629911, ];
@@ -190,9 +188,7 @@ mod tests {
 
     #[test]
     fn explore_y_list() {
-        let mut data: Data = Default::default();
-        data.offset = 0;
-        data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
+        let data = Data::new("./example/cipher.zip", "file", "./example/plain.zip", "file", 0).unwrap();
         let mut attack = Attack::new(&data, 735115);
         attack.x_list = [2, 64, 3414458384, 22000, 207, 3988292578, 881025314, 2807276851, 77, 60, 9, 187, ];
         attack.y_list = [64, 64, 838860800, 4085658340, 702500480, 2170229995, 2383027522, 2433410890, 1767399924, 853191409, 3862839011, 2230629911, ];
@@ -203,9 +199,7 @@ mod tests {
 
     #[test]
     fn get_keys() {
-        let mut data: Data = Default::default();
-        data.offset = 0;
-        data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
+        let data = Data::new("./example/cipher.zip", "file", "./example/plain.zip", "file", 0).unwrap();
         let mut attack = Attack::new(&data, 735115);
         attack.x_list[7] = 2807276851;
         attack.y_list[7] = 2433410890;

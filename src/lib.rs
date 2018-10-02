@@ -3,16 +3,19 @@
 mod attack;
 mod crc32_tab;
 mod data;
-mod file;
 mod keys;
 mod keystream_tab;
 mod mult_tab;
 mod utils;
 mod zreduction;
 
-pub use self::data::Data;
-pub use self::zreduction::Zreduction;
+pub mod file;
+
 pub use self::attack::Attack;
+pub use self::data::Data;
+pub use self::keys::Keys;
+pub use self::keystream_tab::KeystreamTab;
+pub use self::zreduction::Zreduction;
 
 #[cfg(test)]
 mod tests {
@@ -21,9 +24,7 @@ mod tests {
     #[test]
     #[ignore]
     fn crack() {
-        let mut data: Data = Default::default();
-        data.offset = 0;
-        data.load("./example/cipher.zip", "file", "./example/plain.zip", "file").unwrap();
+        let data = Data::new("./example/cipher.zip", "file", "./example/plain.zip", "file", 0).unwrap();
 
         let mut zr = Zreduction::new(&data.keystream);
         zr.generate();
