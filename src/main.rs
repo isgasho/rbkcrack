@@ -96,7 +96,8 @@ fn decipher(
     let mut cipher = cipherstream.bytes();
     let mut i = 0;
     while i < Data::HEADER_SIZE {
-        keys.update(cipher.next().unwrap().unwrap() ^ keystreamtab.get_byte(keys.get_z()));
+        let p = cipher.next().unwrap().unwrap() ^ keystreamtab.get_byte(keys.get_z());
+        keys.update(p);
         i += 1;
     }
 
