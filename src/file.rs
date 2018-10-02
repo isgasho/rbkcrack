@@ -2,98 +2,96 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::process;
+use failure::Error;
 
-fn read<T>(stream: &mut File, x: &mut T) {
+fn read<T>(stream: &mut File, x: &mut T) -> Result<(), Error> {
     let size = std::mem::size_of::<T>();
     match size {
         1 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 1]) };
-            stream.read_exact(x).unwrap();
+            stream.read_exact(x)?;
         },
         2 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 2]) };
-            stream.read_exact(x).unwrap();
+            stream.read_exact(x)?;
         },
         4 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 4]) };
-            stream.read_exact(x).unwrap();
+            stream.read_exact(x)?;
         },
         8 => {
             let x = unsafe { &mut *(x as *mut T as *mut [u8; 8]) };
-            stream.read_exact(x).unwrap();
+            stream.read_exact(x)?;
         },
         _ => (),
     }
+    Ok(())
 }
 
 pub fn load_stream(is: &File, size: usize) -> Vec<u8> {
     is.take(size as u64).bytes().map(|c|c.unwrap()).collect::<Vec<_>>()
 }
 
-pub fn load_file(filename: &str, size: usize) -> Vec<u8> {
-    let is = open_input(filename);
-    load_stream(&is, size)
+pub fn load_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
+    let is = open_input(filename)?;
+    Ok(load_stream(&is, size))
 }
 
-pub fn load_zip_entry(archivename: &str, entryname: &str, size: usize) -> Vec<u8> {
+pub fn load_zip_entry(archivename: &str, entryname: &str, size: usize) -> Result<Vec<u8>, Error> {
     let mut entrysize = 0usize;
-    let is = open_input_zip_entry(archivename, entryname, &mut entrysize);
-    load_stream(&is, entrysize.min(size))
+    let is = open_input_zip_entry(archivename, entryname, &mut entrysize).unwrap();
+    Ok(load_stream(&is, entrysize.min(size)))
 }
 
-fn open_input(filename: &str) -> File {
-    File::open(filename).unwrap_or_else(|e| {
-        eprintln!("Could not open input file: {}", e);
-        process::exit(1);
-    })
+pub fn open_input(filename: &str) -> Result<File, Error> {
+    Ok(File::open(filename)?)
 }
 
-fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> File {
-    let mut is = open_input(archivename);
+pub fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> Result<File, Error> {
+    let mut is = open_input(archivename)?;
 
     // look for end of central directory
-    is.seek(io::SeekFrom::End(-22)).unwrap(); // start by assuming there is no comment
+    is.seek(io::SeekFrom::End(-22))?; // start by assuming there is no comment
     let mut sig = 0u32;
-    read(&mut is, &mut sig);
-    is.seek(io::SeekFrom::Current(-4)).unwrap();
+    read(&mut is, &mut sig)?;
+    is.seek(io::SeekFrom::Current(-4))?;
     while sig != 0x0605_4b50 {
-        is.seek(io::SeekFrom::Current(-1)).unwrap();
-        read(&mut is, &mut sig);
-        is.seek(io::SeekFrom::Current(-4)).unwrap();
+        is.seek(io::SeekFrom::Current(-1))?;
+        read(&mut is, &mut sig)?;
+        is.seek(io::SeekFrom::Current(-4))?;
     }
 
-    let eocdoffset = is.seek(io::SeekFrom::Current(0)).unwrap(); // end of central directory offset
+    let eocdoffset = is.seek(io::SeekFrom::Current(0))?; // end of central directory offset
 
     // read central directory offset
     let mut cdoffset = 0u32;
-    is.seek(io::SeekFrom::Current(16)).unwrap();
-    read(&mut is, &mut cdoffset);
+    is.seek(io::SeekFrom::Current(16))?;
+    read(&mut is, &mut cdoffset)?;
 
     // iterate on each entry
-    is.seek(io::SeekFrom::Start(u64::from(cdoffset))).unwrap();
+    is.seek(io::SeekFrom::Start(u64::from(cdoffset)))?;
     let mut name = String::new();
     let (mut compressed_size, mut offset) = (0u32, 0u32);
 
-    while name != entryname && is.seek(io::SeekFrom::Current(0)).unwrap() != eocdoffset {
+    while name != entryname && is.seek(io::SeekFrom::Current(0))? != eocdoffset {
         let (mut name_size, mut extra_size, mut comment_size): (u16, u16, u16) = (0, 0, 0);
 
-        is.seek(io::SeekFrom::Current(20)).unwrap();
-        read(&mut is, &mut compressed_size);
-        is.seek(io::SeekFrom::Current(4)).unwrap();
-        read(&mut is, &mut name_size);
-        read(&mut is, &mut extra_size);
-        read(&mut is, &mut comment_size);
-        is.seek(io::SeekFrom::Current(8)).unwrap();
-        read(&mut is, &mut offset);
+        is.seek(io::SeekFrom::Current(20))?;
+        read(&mut is, &mut compressed_size)?;
+        is.seek(io::SeekFrom::Current(4))?;
+        read(&mut is, &mut name_size)?;
+        read(&mut is, &mut extra_size)?;
+        read(&mut is, &mut comment_size)?;
+        is.seek(io::SeekFrom::Current(8))?;
+        read(&mut is, &mut offset)?;
 
         let mut bytes = vec![0u8; name_size as usize];
-        is.read_exact(&mut bytes).unwrap();
-        is.seek(io::SeekFrom::Current(i64::from(extra_size + comment_size))).unwrap();
+        is.read_exact(&mut bytes)?;
+        is.seek(io::SeekFrom::Current(i64::from(extra_size + comment_size)))?;
 
         name = bytes.iter().map(|&b| b as char).collect::<String>();
-        //println!("{} {} {}", name, is.seek(io::SeekFrom::Current(0)).unwrap(), eocdoffset);
+        //println!("{} {} {}", name, is.seek(io::SeekFrom::Current(0))?, eocdoffset);
     }
-
 
     // TODO: 应该要抛个异常
     if name != entryname {
@@ -103,11 +101,16 @@ fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) ->
 
     // read local file header
     let mut extra_size = 0u16;
-    is.seek(io::SeekFrom::Start(u64::from(offset) + 28)).unwrap();
-    read(&mut is, &mut extra_size);
-    is.seek(io::SeekFrom::Current(name.len() as i64 + i64::from(extra_size))).unwrap();
+    is.seek(io::SeekFrom::Start(u64::from(offset) + 28))?;
+    read(&mut is, &mut extra_size)?;
+    is.seek(io::SeekFrom::Current(name.len() as i64 + i64::from(extra_size)))?;
 
     *size = compressed_size as usize;
 
-    is
+    Ok(is)
 }
+
+pub fn open_output(filename: &str) -> Result<File, Error> {
+    Ok(File::create(filename)?)
+}
+

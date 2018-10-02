@@ -2,7 +2,6 @@ use super::attack::*;
 use super::failure::Error;
 use super::file::*;
 
-#[derive(Default)]
 pub struct Data {
     pub ciphertext: Vec<u8>,
     pub plaintext: Vec<u8>,
@@ -13,58 +12,62 @@ pub struct Data {
 impl Data {
     pub const HEADER_SIZE: usize = 12;
 
-    pub fn load(
-        &mut self,
+    pub fn new(
         cipherarchive: &str,
         cipherfile: &str,
         plainarchive: &str,
         plainfile: &str,
-    ) -> Result<(), Error> {
+        offset: i32,
+    ) -> Result<Data, Error> {
         // check that offset is not too small
-        if Data::HEADER_SIZE as i32 + self.offset < 0 {
+        if Data::HEADER_SIZE as i32 + offset < 0 {
             return Err(format_err!("offset is too small"));
         }
 
         // load known plaintext
-        self.plaintext = if plainarchive.is_empty() {
-            load_file(plainfile, std::usize::MAX)
+        let plaintext = if plainarchive.is_empty() {
+            load_file(plainfile, std::usize::MAX)?
         } else {
-            load_zip_entry(plainarchive, plainfile, std::usize::MAX)
+            load_zip_entry(plainarchive, plainfile, std::usize::MAX)?
         };
 
         // check that plaintext is big enough
-        if self.plaintext.len() < Attack::SIZE {
+        if plaintext.len() < Attack::SIZE {
             return Err(format_err!("plaintext is too small"));
         }
 
         // load ciphertext needed by the attack
-        let to_read = Data::HEADER_SIZE + self.offset as usize + self.plaintext.len();
-        self.ciphertext = if cipherarchive.is_empty() {
-            load_file(cipherfile, to_read)
+        let to_read = Data::HEADER_SIZE + offset as usize + plaintext.len();
+        let ciphertext = if cipherarchive.is_empty() {
+            load_file(cipherfile, to_read)?
         } else {
-            load_zip_entry(cipherarchive, cipherfile, to_read)
+            load_zip_entry(cipherarchive, cipherfile, to_read)?
         };
 
         // check that ciphertext is valid
-        if self.plaintext.len() > self.ciphertext.len() {
+        if plaintext.len() > ciphertext.len() {
             return Err(format_err!("ciphertext is smaller than plaintext"));
-        } else if Data::HEADER_SIZE + self.offset as usize + self.plaintext.len()
-            > self.ciphertext.len()
+        } else if Data::HEADER_SIZE + offset as usize + plaintext.len()
+            > ciphertext.len()
         {
             return Err(format_err!("offset is too large"));
         }
 
         // compute keystream
-        self.keystream = self
-            .plaintext
+        let keystream = plaintext
             .iter()
             .zip(
-                self.ciphertext
+                ciphertext
                     .iter()
-                    .skip(Data::HEADER_SIZE + self.offset as usize),
+                    .skip(Data::HEADER_SIZE + offset as usize),
             )
             .map(|(x, y)| x ^ y)
             .collect();
-        Ok(())
+        Ok(Data{
+            ciphertext,
+            plaintext,
+            keystream,
+            offset,
+        })
     }
 }
