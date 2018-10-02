@@ -12,11 +12,13 @@ impl KeystreamTab {
         let mut keystreamtab = KeystreamTab {
             keystreamtab: [0; 1 << 14],
             keystreaminvtab: [[0; 64]; 256],
-            keystreaminvfiltertab: (0..256).map(|_|(0..64).map(|_|vec![]).collect::<Vec<_>>()).collect::<Vec<_>>(),
+            keystreaminvfiltertab: (0..256)
+                .map(|_| (0..64).map(|_| vec![]).collect::<Vec<_>>())
+                .collect::<Vec<_>>(),
         };
 
         let mut next = [0; 256];
-        for z_2_16 in (0..1<<16).step_by(4) {
+        for z_2_16 in (0..1 << 16).step_by(4) {
             let k = lsb(((z_2_16 | 2) * (z_2_16 | 3)) >> 8);
             keystreamtab.keystreamtab[(z_2_16 >> 2) as usize] = k;
             keystreamtab.keystreaminvtab[k as usize][next[k as usize]] = z_2_16;
@@ -63,11 +65,17 @@ mod test {
     #[test]
     fn get_zi_2_16_array() {
         let ret = vec![16, 20, 360, 1964, 2244, 2972, 3636, 4648, 5824, 7092];
-        assert_eq!(ret, KeystreamTab::new().get_zi_2_16_array(1)[0..10].to_vec());
+        assert_eq!(
+            ret,
+            KeystreamTab::new().get_zi_2_16_array(1)[0..10].to_vec()
+        );
     }
 
     #[test]
     fn get_zi_2_16_vector() {
-        assert_eq!(&vec![47872], KeystreamTab::new().get_zi_2_16_vector(167, 243712));
+        assert_eq!(
+            &vec![47872],
+            KeystreamTab::new().get_zi_2_16_vector(167, 243712)
+        );
     }
 }

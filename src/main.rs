@@ -1,14 +1,17 @@
-#[macro_use] extern crate clap;
-#[macro_use] extern crate failure;
+#[macro_use]
+extern crate clap;
+#[macro_use]
+extern crate failure;
 extern crate chrono;
+extern crate rbkcrack;
 
-use bkcrack::{Attack, Data, Keys, KeystreamTab, Zreduction};
-use bkcrack::file;
-use clap::App;
+use rbkcrack::file;
+use rbkcrack::{Attack, Data, Keys, KeystreamTab, Zreduction};
 use chrono::Local;
+use clap::App;
 use failure::Error;
-use std::process;
 use std::io::prelude::*;
+use std::process;
 use std::u32;
 
 fn now() -> String {
@@ -20,7 +23,7 @@ fn find_keys(
     plainarchive: &str,
     cipherfile: &str,
     plainfile: &str,
-    offset: i32
+    offset: i32,
 ) -> Result<Keys, Error> {
     // load data
     let data = Data::new(cipherarchive, cipherfile, plainarchive, plainfile, offset)?;
@@ -31,7 +34,11 @@ fn find_keys(
     println!("Generated {} Z values.", zr.size());
 
     if data.keystream.len() > Attack::SIZE {
-        println!("[{}] Z reduction using {} extra bytes of known plaintext", now(), data.keystream.len() - Attack::SIZE);
+        println!(
+            "[{}] Z reduction using {} extra bytes of known plaintext",
+            now(),
+            data.keystream.len() - Attack::SIZE
+        );
         zr.reduce();
         println!("\n{} values remaining.", zr.size());
     }
@@ -41,15 +48,25 @@ fn find_keys(
     let mut done = 1;
     let mut found = false;
     let size = zr.size();
-    println!("[{}] Attack on {} Z values at index {}", now(), size, data.offset + zr.get_index() as i32);
+    println!(
+        "[{}] Attack on {} Z values at index {}",
+        now(),
+        size,
+        data.offset + zr.get_index() as i32
+    );
 
-    for it in zr.zi_2_32_vector {
+    for &it in zr.get_zi_2_32_vector() {
         if attack.carry_out(it) {
             found = true;
             break;
         }
         done += 1;
-        print!("\r{:.2} % ({} / {})", done as f32 / size as f32 * 100.0, done, size);
+        print!(
+            "\r{:.2} % ({} / {})",
+            done as f32 / size as f32 * 100.0,
+            done,
+            size
+        );
     }
     println!();
 
@@ -61,8 +78,12 @@ fn find_keys(
     }
 }
 
-
-fn decipher(keys: &mut Keys, cipherarchive: &str, cipherfile: &str, decipheredfile: &str) -> Result<(), Error> {
+fn decipher(
+    keys: &mut Keys,
+    cipherarchive: &str,
+    cipherfile: &str,
+    decipheredfile: &str,
+) -> Result<(), Error> {
     let mut ciphersize = std::usize::MAX;
     let cipherstream = if cipherarchive.is_empty() {
         file::open_input(cipherfile)?
@@ -86,7 +107,7 @@ fn decipher(keys: &mut Keys, cipherarchive: &str, cipherfile: &str, decipheredfi
         vec.push(p);
         i += 1;
     }
-    decipheredstream.write(&vec)?;
+    decipheredstream.write_all(&vec)?;
 
     Ok(())
 }
@@ -100,21 +121,27 @@ fn main() {
 
     let cipherfile = matches.value_of("cipherfile").unwrap();
     let plainfile = matches.value_of("plainfile").unwrap();
-    let offset = matches.value_of("offset").unwrap_or("0").parse::<i32>().unwrap_or_else(|e| {
-        eprintln!("offset error: {}", e);
-        std::process::exit(1);
-    });
+    let offset = matches
+        .value_of("offset")
+        .unwrap_or("0")
+        .parse::<i32>()
+        .unwrap_or_else(|e| {
+            eprintln!("offset error: {}", e);
+            std::process::exit(1);
+        });
 
     let key = if matches.occurrences_of("key") != 0 {
         let key: Vec<&str> = matches.values_of("key").unwrap().collect();
-        key.iter().map(|s| {
-            s.parse::<u32>().unwrap_or_else(|_e| {
-                u32::from_str_radix(s, 16).unwrap_or_else(|_e| {
-                    eprintln!("key must be decimal or hexadecimal.");
-                    process::exit(1);
+        key.iter()
+            .map(|s| {
+                s.parse::<u32>().unwrap_or_else(|_e| {
+                    u32::from_str_radix(s, 16).unwrap_or_else(|_e| {
+                        eprintln!("key must be decimal or hexadecimal.");
+                        process::exit(1);
+                    })
                 })
             })
-        }).collect::<Vec<_>>()
+            .collect::<Vec<_>>()
     } else {
         vec![]
     };
@@ -126,13 +153,19 @@ fn main() {
     } else {
         match find_keys(cipherarchive, plainarchive, cipherfile, plainfile, offset) {
             Ok(keys) => {
-                println!("[{}] Keys\n{:x} {:x} {:x}", now(), keys.get_x(), keys.get_y(), keys.get_z());
+                println!(
+                    "[{}] Keys\n{:x} {:x} {:x}",
+                    now(),
+                    keys.get_x(),
+                    keys.get_y(),
+                    keys.get_z()
+                );
                 keys
-            },
+            }
             Err(e) => {
                 eprintln!("{}", e);
                 process::exit(1);
-            },
+            }
         }
     };
 

@@ -1,7 +1,7 @@
-name: bkcrack
+name: rbkcrack
 version: "0.1.0"
-author: Aloxaf <aloxafx@gmail.com>
-about: Crack legacy zip encryption with Biham and Kocher's known plaintext attack.
+author: "Aloxaf <aloxafx@gmail.com>"
+about: Crack legacy zip encryption with Biham and Kocher's known plaintext attack. Fork from bkcrack.
 args:
 - cipherfile:
     short: c

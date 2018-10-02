@@ -47,23 +47,17 @@ impl Data {
         // check that ciphertext is valid
         if plaintext.len() > ciphertext.len() {
             return Err(format_err!("ciphertext is smaller than plaintext"));
-        } else if Data::HEADER_SIZE + offset as usize + plaintext.len()
-            > ciphertext.len()
-        {
+        } else if Data::HEADER_SIZE + offset as usize + plaintext.len() > ciphertext.len() {
             return Err(format_err!("offset is too large"));
         }
 
         // compute keystream
         let keystream = plaintext
             .iter()
-            .zip(
-                ciphertext
-                    .iter()
-                    .skip(Data::HEADER_SIZE + offset as usize),
-            )
+            .zip(ciphertext.iter().skip(Data::HEADER_SIZE + offset as usize))
             .map(|(x, y)| x ^ y)
             .collect();
-        Ok(Data{
+        Ok(Data {
             ciphertext,
             plaintext,
             keystream,
