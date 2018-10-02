@@ -36,6 +36,7 @@ impl Keys {
         self.z = z;
     }
 
+    // TODO: 这一堆 wrapping, 真的会溢出? 为啥会溢出?
     /// Update the state with a plaintext byte
     pub fn update(&mut self, p: u8) {
         self.x = self.crc32tab.crc32(self.x, p);

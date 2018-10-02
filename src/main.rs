@@ -5,11 +5,11 @@ extern crate failure;
 extern crate chrono;
 extern crate rbkcrack;
 
-use rbkcrack::file;
-use rbkcrack::{Attack, Data, Keys, KeystreamTab, Zreduction};
 use chrono::Local;
 use clap::App;
 use failure::Error;
+use rbkcrack::file;
+use rbkcrack::{Attack, Data, Keys, KeystreamTab, Zreduction, progress};
 use std::io::prelude::*;
 use std::process;
 use std::u32;
@@ -61,12 +61,7 @@ fn find_keys(
             break;
         }
         done += 1;
-        print!(
-            "\r{:.2} % ({} / {})",
-            done as f32 / size as f32 * 100.0,
-            done,
-            size
-        );
+        progress(done, size);
     }
     println!();
 

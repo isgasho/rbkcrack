@@ -1,6 +1,7 @@
 use super::attack::*;
 use super::failure::Error;
 use super::file::*;
+use std::usize;
 
 pub struct Data {
     pub ciphertext: Vec<u8>,
@@ -26,9 +27,9 @@ impl Data {
 
         // load known plaintext
         let plaintext = if plainarchive.is_empty() {
-            load_file(plainfile, std::usize::MAX)?
+            load_file(plainfile, usize::MAX)?
         } else {
-            load_zip_entry(plainarchive, plainfile, std::usize::MAX)?
+            load_zip_entry(plainarchive, plainfile, usize::MAX)?
         };
 
         // check that plaintext is big enough

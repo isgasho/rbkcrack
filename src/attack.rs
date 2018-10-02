@@ -189,7 +189,8 @@ impl<'a> Attack<'a> {
 
         // check that X3 fits with Y1[26,32)
         let y1_26_32 = self.crc32tab.get_yi_24_32(self.z_list[1], self.z_list[0]) & MASK_26_32;
-        if ((self.y_list[3] - 1).wrapping_mul(MultTab::MULTINV) - u32::from(lsb(x)) - 1).wrapping_mul(MultTab::MULTINV)
+        if ((self.y_list[3] - 1).wrapping_mul(MultTab::MULTINV) - u32::from(lsb(x)) - 1)
+            .wrapping_mul(MultTab::MULTINV)
             - y1_26_32
             > MAXDIFF_0_26
         {

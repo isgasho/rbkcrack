@@ -1,6 +1,7 @@
 use super::attack::Attack;
 use super::crc32_tab::Crc32Tab;
 use super::keystream_tab::KeystreamTab;
+use super::progress;
 use std::mem;
 
 pub struct Zreduction<'a> {
@@ -105,12 +106,7 @@ impl<'a> Zreduction<'a> {
             // self.zi_2_32_vector = zim1_2_32_vector;
             let now = self.keystream.len() - i;
             let total = self.keystream.len() - Attack::SIZE;
-            print!(
-                "\r{:.2} % ({} / {})",
-                now as f32 / total as f32 * 100.0,
-                now,
-                total
-            );
+            progress(now, total);
         }
 
         if tracking {
