@@ -39,14 +39,14 @@ impl Keys {
     /// Update the state with a plaintext byte
     pub fn update(&mut self, p: u8) {
         self.x = self.crc32tab.crc32(self.x, p);
-        self.y = (self.y + u32::from(lsb(self.x))) * MultTab::MULT + 1;
+        self.y = (self.y + u32::from(lsb(self.x))).wrapping_mul(MultTab::MULT) + 1;
         self.z = self.crc32tab.crc32(self.z, msb(self.y));
     }
 
     /// Update the state backward with a ciphertext byte
     pub fn update_backword(&mut self, c: u8) {
         self.z = self.crc32tab.crc32inv(self.z, msb(self.y));
-        self.y = (self.y - 1) * MultTab::MULTINV - u32::from(lsb(self.x));
+        self.y = (self.y - 1).wrapping_mul(MultTab::MULTINV) - u32::from(lsb(self.x));
         self.x = self
             .crc32tab
             .crc32inv(self.x, c ^ self.keystream.get_byte(self.z));
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn update() {
-        let key: Keys = Default::default();
+        let _key: Keys = Default::default();
         // TODO: Finish this
     }
 }
