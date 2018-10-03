@@ -37,21 +37,25 @@ impl Crc32Tab {
     }
 
     /// return CRC32 using a lookup table
+    #[inline]
     pub fn crc32(&self, pval: u32, b: u8) -> u32 {
         pval >> 8 ^ self.crctab[(lsb(pval) ^ b) as usize]
     }
 
     /// return CRC32^-1 using a lookup table
+    #[inline]
     pub fn crc32inv(&self, crc: u32, b: u8) -> u32 {
         crc << 8 ^ self.crcinvtab[msb(crc) as usize] ^ u32::from(b)
     }
 
     /// return Yi[24,32) from Zi and Z{i-1} using CRC32^-1
+    #[inline]
     pub fn get_yi_24_32(&self, zi: u32, zim1: u32) -> u32 {
         (self.crc32inv(zi, 0) ^ zim1) << 24
     }
 
     /// return Z{i-1}[10,32) from Zi[2,32) using CRC32^-1
+    #[inline]
     pub fn get_zim1_10_32(&self, zi_2_32: u32) -> u32 {
         self.crc32inv(zi_2_32, 0) & MASK_10_32
     }

@@ -14,7 +14,9 @@ pub fn load_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
 
 pub fn load_zip_entry(archivename: &str, entryname: &str, _size: usize) -> Result<Vec<u8>, Error> {
     let archive = File::open(archivename)?;
-    let mut zip = ZipArchive::new(archive)?;
+    debug!("loading {}", archivename);
+    let mut zip = ZipArchive::new(archive, true)?;
+    debug!("searching {}", entryname);
     let bytes = zip.by_name_raw(entryname)?;
     Ok(bytes)
 }
@@ -22,7 +24,9 @@ pub fn load_zip_entry(archivename: &str, entryname: &str, _size: usize) -> Resul
 // TODO: 返回 Vec<u8> 不是一个明智的选择, 文件太大可能会爆内存
 pub fn open_input_zip_entry(archivename: &str, entryname: &str) -> Result<Vec<u8>, Error> {
     let archive = File::open(archivename)?;
-    let mut zip = ZipArchive::new(archive)?;
+    debug!("loading {}", archivename);
+    let mut zip = ZipArchive::new(archive, true)?;
+    debug!("searching {}", entryname);
     let bytes = zip.by_name_raw(entryname)?;
     Ok(bytes)
 }

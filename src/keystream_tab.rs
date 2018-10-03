@@ -31,12 +31,14 @@ impl KeystreamTab {
 
     /// **return** the keystream byte ki associated to a Zi value
     /// **note** Only Zi[2,16) is used
+    #[inline]
     pub fn get_byte(&self, zi: u32) -> u8 {
         self.keystreamtab[((zi & MASK_0_16) >> 2) as usize]
     }
 
     /// **return** a sorted array of 64 Zi[2,16) values such that
     /// getByte(zi) is equal to ki
+    #[inline]
     pub fn get_zi_2_16_array(&self, ki: u8) -> [u32; 64] {
         self.keystreaminvtab[ki as usize]
     }
@@ -44,6 +46,7 @@ impl KeystreamTab {
     /// **return** a vector of Zi[2,16) values having given [10,16) bits
     /// such that getByte(zi) is equal to ki
     /// **note** the vector contains one element on average
+    #[inline]
     pub fn get_zi_2_16_vector(&self, ki: u8, zi_10_16: u32) -> &Vec<u32> {
         &self.keystreaminvfiltertab[ki as usize][((zi_10_16 & MASK_0_16) >> 10) as usize]
     }

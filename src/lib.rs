@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate log;
 extern crate zip;
+extern crate chrono;
 
 mod attack;
 mod crc32_tab;

@@ -3,6 +3,8 @@ extern crate clap;
 #[macro_use]
 extern crate failure;
 extern crate chrono;
+extern crate log;
+extern crate env_logger;
 extern crate rbkcrack;
 
 use chrono::Local;
@@ -108,6 +110,8 @@ fn decipher(
 }
 
 fn main() {
+    env_logger::init();
+
     let yaml = load_yaml!("../cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
