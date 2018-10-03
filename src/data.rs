@@ -31,7 +31,7 @@ impl Data {
         } else {
             load_zip_entry(plainarchive, plainfile, usize::MAX)?
         };
-
+        debug!("loaded plain {}", plainarchive);
         // check that plaintext is big enough
         if plaintext.len() < Attack::SIZE {
             return Err(format_err!("plaintext is too small"));
@@ -44,6 +44,7 @@ impl Data {
         } else {
             load_zip_entry(cipherarchive, cipherfile, to_read)?
         };
+        debug!("loaded cipher {}", cipherarchive);
 
         // check that ciphertext is valid
         if plaintext.len() > ciphertext.len() {
