@@ -19,7 +19,3 @@ pub const MASK_2_32: u32 = 0xffff_fffc;
 //  A - B[x,32) <= mask[0,x) + 0xff
 pub const MAXDIFF_0_24: u32 = 0x00ff_ffff + 0xff;
 pub const MAXDIFF_0_26: u32 = 0x03ff_ffff + 0xff;
-
-pub enum Zip {
-    EndLocator = 0x0605_4B50,
-}
