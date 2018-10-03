@@ -3,28 +3,13 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::mem;
+use std::slice;
+use super::utils::Zip;
 
 fn read<T>(stream: &mut File, x: &mut T) -> Result<(), Error> {
     let size = mem::size_of::<T>();
-    match size {
-        1 => {
-            let x = unsafe { &mut *(x as *mut T as *mut [u8; 1]) };
-            stream.read_exact(x)?;
-        }
-        2 => {
-            let x = unsafe { &mut *(x as *mut T as *mut [u8; 2]) };
-            stream.read_exact(x)?;
-        }
-        4 => {
-            let x = unsafe { &mut *(x as *mut T as *mut [u8; 4]) };
-            stream.read_exact(x)?;
-        }
-        8 => {
-            let x = unsafe { &mut *(x as *mut T as *mut [u8; 8]) };
-            stream.read_exact(x)?;
-        }
-        _ => (),
-    }
+    let x = unsafe { &mut *(slice::from_raw_parts_mut(x, size) as *mut [T] as *mut [u8]) };
+    stream.read_exact(x)?;
     Ok(())
 }
 
@@ -62,7 +47,7 @@ pub fn open_input_zip_entry(
     let mut sig = 0u32;
     read(&mut is, &mut sig)?;
     is.seek(io::SeekFrom::Current(-4))?;
-    while sig != 0x0605_4b50 {
+    while sig != Zip::EndLocator as u32 {
         is.seek(io::SeekFrom::Current(-1))?;
         read(&mut is, &mut sig)?;
         is.seek(io::SeekFrom::Current(-4))?;
