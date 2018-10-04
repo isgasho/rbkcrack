@@ -27,11 +27,11 @@ impl Data {
 
         // load known plaintext
         let plaintext = if plainarchive.is_empty() {
-            load_file(plainfile, usize::MAX)?
+            load_raw_file(plainfile, usize::MAX)?
         } else {
             load_zip_entry(plainarchive, plainfile, usize::MAX)?
         };
-        debug!("loaded plain {}", plainarchive);
+        debug!("loaded plain {}, size {}", plainarchive, plaintext.len());
         // check that plaintext is big enough
         if plaintext.len() < Attack::SIZE {
             return Err(format_err!("plaintext is too small"));
@@ -40,11 +40,11 @@ impl Data {
         // load ciphertext needed by the attack
         let to_read = Data::HEADER_SIZE + offset as usize + plaintext.len();
         let ciphertext = if cipherarchive.is_empty() {
-            load_file(cipherfile, to_read)?
+            load_raw_file(cipherfile, to_read)?
         } else {
             load_zip_entry(cipherarchive, cipherfile, to_read)?
         };
-        debug!("loaded cipher {}", cipherarchive);
+        debug!("loaded cipher {}, size {}", cipherarchive, ciphertext.len());
 
         // check that ciphertext is valid
         if plaintext.len() > ciphertext.len() {
