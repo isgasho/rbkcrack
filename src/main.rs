@@ -2,8 +2,8 @@
 extern crate clap;
 #[macro_use]
 extern crate failure;
-extern crate flate2;
 extern crate chrono;
+extern crate flate2;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
@@ -14,8 +14,8 @@ use chrono::Local;
 use clap::App;
 use failure::Error;
 use flate2::read::DeflateDecoder;
-use rbkcrack::{file, progress, Attack, Data, Keys, KeystreamTab, Zreduction};
 use podio::WritePodExt;
+use rbkcrack::{file, progress, Attack, Data, Keys, KeystreamTab, Zreduction};
 use std::io::prelude::*;
 use std::process;
 use std::u32;
@@ -88,9 +88,9 @@ fn decipher(
 ) -> Result<(), Error> {
     let mut ciphersize = 0;
     let cipherstream = if cipherarchive.is_empty() {
-        file::open_input(cipherfile, &mut ciphersize)?
+        file::open_raw_file(cipherfile, &mut ciphersize)?
     } else {
-        file::open_input_zip_entry(cipherarchive, cipherfile, &mut ciphersize)?
+        file::open_zip_entry(cipherarchive, cipherfile, &mut ciphersize)?
     };
 
     let mut decipheredstream = file::open_output(decipheredfile)?;

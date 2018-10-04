@@ -2,8 +2,8 @@
 extern crate failure;
 #[macro_use]
 extern crate log;
-extern crate zip;
 extern crate chrono;
+extern crate zip;
 
 mod attack;
 mod crc32_tab;

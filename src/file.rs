@@ -1,29 +1,32 @@
 use failure::Error;
-use std::fs::{File, metadata};
+use std::fs::{metadata, File};
 use std::io::prelude::*;
 use std::io::SeekFrom;
 use zip::ZipArchive;
 
-pub fn load_file(filename: &str, _size: usize) -> Result<Vec<u8>, Error> {
-    let mut size = 0;
-    let bytes = open_input(filename, &mut size)?
-        .take(size as u64)
+fn load_stream(stream: File, size: u64) -> Vec<u8> {
+    stream
+        .take(size)
         .bytes()
-        .map(|c| c.unwrap())
-        .collect::<Vec<_>>();
+        .map(|b| b.unwrap())
+        .collect::<Vec<_>>()
+}
+
+pub fn open_raw_file(filename: &str, size: &mut usize) -> Result<File, Error> {
+    let file = File::open(filename)?;
+    let meta = metadata(filename)?;
+    *size = meta.len() as usize;
+    Ok(file)
+}
+
+pub fn load_raw_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
+    let mut real_size = 0;
+    let file = open_raw_file(filename, &mut real_size)?;
+    let bytes = load_stream(file, size.min(real_size) as u64);
     Ok(bytes)
 }
 
-pub fn load_zip_entry(archivename: &str, entryname: &str, _size: usize) -> Result<Vec<u8>, Error> {
-    let archive = File::open(archivename)?;
-    debug!("loading {}", archivename);
-    let mut zip = ZipArchive::new(archive, true)?;
-    debug!("searching {}", entryname);
-    let bytes = zip.by_name_raw(entryname)?;
-    Ok(bytes)
-}
-
-pub fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> Result<File, Error> {
+pub fn open_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> Result<File, Error> {
     let archive = File::open(archivename)?;
     debug!("loading {}", archivename);
     let zip = ZipArchive::new(archive, true)?;
@@ -35,16 +38,16 @@ pub fn open_input_zip_entry(archivename: &str, entryname: &str, size: &mut usize
     let mut reader = zip.into_inner();
 
     reader.seek(SeekFrom::Start(data.data_start))?;
-    *size = data.uncompressed_size.max(data.compressed_size) as usize;
+    *size = data.compressed_size as usize;
     debug!("file:{} size: {}", entryname, size);
     Ok(reader)
 }
 
-pub fn open_input(filename: &str, size: &mut usize) -> Result<File, Error> {
-    let file = File::open(filename)?;
-    let meta = metadata(filename)?;
-    *size = meta.len() as usize;
-    Ok(file)
+pub fn load_zip_entry(archivename: &str, entryname: &str, size: usize) -> Result<Vec<u8>, Error> {
+    let mut real_size = 0;
+    let file = open_zip_entry(archivename, entryname, &mut real_size)?;
+    let bytes = load_stream(file, size.min(real_size) as u64);
+    Ok(bytes)
 }
 
 pub fn open_output(filename: &str) -> Result<File, Error> {

@@ -2,6 +2,12 @@
 name = "rbkcrack"
 version = "0.1.0"
 authors = ["Aloxaf <bailong104@gmail.com>"]
+description = "Crack legacy zip encryption with Biham and Kocher's known plaintext attack."
+documentation = "https://github.com/Aloxaf/rbkcrack"
+repository = "https://github.com/Aloxaf/rbkcrack"
+readme = "readme.md"
+keywords = ["zip", "crack"]
+license = "zlib"
 
 [dependencies]
 failure = "0.1.2"
