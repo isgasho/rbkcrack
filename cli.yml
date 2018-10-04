@@ -35,3 +35,6 @@ args:
     short: d
     help: File to write the deciphered text
     takes_value: true
+- unzip:
+    short: u
+    help: not only decipher but also unzip

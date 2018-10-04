@@ -10,3 +10,5 @@ chrono = "0.4.6"
 zip = { git = "https://github.com/Aloxaf/zip-rs" }
 log = "0.4.5"
 env_logger = "0.5.13"
+flate2 = "1.0.2"
+podio = "0.1.6"

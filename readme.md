@@ -65,6 +65,10 @@ If deflate compression was used, a Python 3 script provided in the `tools` folde
 
     tools/inflate.py < decipheredfile > decompressedfile
 
+You can also use `-u` option to enable decompress
+
+    rbkcrack -C encrypted.zip -c cipher -P plain.zip -p plain -d final -u
+
 Learn
 -----
 

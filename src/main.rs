@@ -2,15 +2,20 @@
 extern crate clap;
 #[macro_use]
 extern crate failure;
+extern crate flate2;
 extern crate chrono;
+#[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate podio;
 extern crate rbkcrack;
 
 use chrono::Local;
 use clap::App;
 use failure::Error;
+use flate2::read::DeflateDecoder;
 use rbkcrack::{file, progress, Attack, Data, Keys, KeystreamTab, Zreduction};
+use podio::WritePodExt;
 use std::io::prelude::*;
 use std::process;
 use std::u32;
@@ -79,33 +84,43 @@ fn decipher(
     cipherarchive: &str,
     cipherfile: &str,
     decipheredfile: &str,
+    unzip: bool,
 ) -> Result<(), Error> {
+    let mut ciphersize = 0;
     let cipherstream = if cipherarchive.is_empty() {
-        file::open_input(cipherfile)?
+        file::open_input(cipherfile, &mut ciphersize)?
     } else {
-        file::open_input_zip_entry(cipherarchive, cipherfile)?
+        file::open_input_zip_entry(cipherarchive, cipherfile, &mut ciphersize)?
     };
-    let ciphersize = cipherstream.len();
+
     let mut decipheredstream = file::open_output(decipheredfile)?;
     let keystreamtab = KeystreamTab::new();
 
-    let mut cipher = cipherstream.iter();
+    let mut cipher = cipherstream.bytes();
     let mut i = 0;
     while i < Data::HEADER_SIZE {
-        let p = cipher.next().unwrap() ^ keystreamtab.get_byte(keys.get_z());
+        let p = cipher.next().unwrap().unwrap() ^ keystreamtab.get_byte(keys.get_z());
         keys.update(p);
         i += 1;
     }
 
     let mut vec = Vec::with_capacity(ciphersize - i);
-    while i < ciphersize {
-        let p = cipher.next().unwrap() ^ keystreamtab.get_byte(keys.get_z());
+    debug!("deciphering");
+    for b in cipher.take(ciphersize - i) {
+        let p: u8 = b.unwrap() ^ keystreamtab.get_byte(keys.get_z());
         keys.update(p);
         vec.push(p);
-        i += 1;
     }
-    decipheredstream.write_all(&vec)?;
 
+    debug!("decompressing");
+    if unzip {
+        let deflater = DeflateDecoder::new(&vec[..]);
+        for b in deflater.bytes() {
+            decipheredstream.write_u8(b.unwrap())?;
+        }
+    } else {
+        decipheredstream.write_all(&vec)?;
+    }
     Ok(())
 }
 
@@ -168,9 +183,10 @@ fn main() {
         }
     };
 
+    let unzip = matches.occurrences_of("unzip") != 0;
     let decipheredfile = matches.value_of("decipheredfile").unwrap_or("");
     if decipheredfile != "" {
-        decipher(&mut keys, cipherarchive, cipherfile, decipheredfile).unwrap_or_else(|e| {
+        decipher(&mut keys, cipherarchive, cipherfile, decipheredfile, unzip).unwrap_or_else(|e| {
             eprintln!("decipher error: {}", e);
             process::exit(1);
         });
