@@ -21,7 +21,7 @@ Build and install it with [Cargo](https://doc.rust-lang.org/cargo).
 cargo install --git https://github.com/Aloxaf/rbkcrack
 ```
 
-Usage
+Usage ([中文版](https://github.com/Aloxaf/rbkcrack/blob/master/README_CN.md))
 -----
 
 ### Data required
@@ -31,13 +31,13 @@ The larger the known plaintext, the faster the attack.
 
 #### From zip archives
 
-Having a zip archive `encrypted.zip` with the entry `cipher` being the ciphertext and `plain.zip` with the entry `plain` as the known plaintext, bkcrack can be run like this:
+Having a zip archive `encrypted.zip` with the entry `cipher` being the ciphertext and `plain.zip` with the entry `plain` as the known plaintext, rbkcrack can be run like this:
 
     rbkcrack -C encrypted.zip -c cipher -P plain.zip -p plain
 
 #### From files
 
-Having a file `cipherfile` with the ciphertext (starting with the 12 bytes corresponding to the encryption header) and `plainfile` with the known plaintext, bkcrack can be run like this:
+Having a file `cipherfile` with the ciphertext (starting with the 12 bytes corresponding to the encryption header) and `plainfile` with the known plaintext, rbkcrack can be run like this:
 
     rbkcrack -c cipherfile -p plainfile
 
@@ -54,13 +54,9 @@ If the attack is successful, the deciphered text can be saved:
 
     rbkcrack -c cipherfile -p plainfile -d decipheredfile
 
-If the keys are known from a previous attack, it is possible to use bkcrack to decipher data:
+If the keys are known from a previous attack, it is possible to use rbkcrack to decipher data:
 
     rbkcrack -c cipherfile -k 12345678 23456789 34567890 -d decipheredfile
-
-**[Suggested]** If you want to decipher and decompress the whole file, you can use my custom [p7zip](https://github.com/Aloxaf/p7zip):
-
-    7za e cipher.zip '-p[d4f34b9d_a6ba3461_dcd97451]'
 
 ### Decompress
 
@@ -72,6 +68,10 @@ If deflate compression was used, a Python 3 script provided in the `tools` folde
 You can also use `-u` option to enable decompress
 
     rbkcrack -C encrypted.zip -c cipher -P plain.zip -p plain -d final -u
+
+**[Suggested]** If you want to decipher and decompress the whole file, you can use my custom [p7zip](https://github.com/Aloxaf/p7zip):
+
+    7za e cipher.zip '-p[d4f34b9d_a6ba3461_dcd97451]'
 
 Learn
 -----
