@@ -168,7 +168,7 @@ fn main() {
         match find_keys(cipherarchive, plainarchive, cipherfile, plainfile, offset) {
             Ok(keys) => {
                 println!(
-                    "[{}] Keys\n{:x} {:x} {:x}",
+                    "[{}] Keys\n{:08x} {:08x} {:08x}",
                     now(),
                     keys.get_x(),
                     keys.get_y(),

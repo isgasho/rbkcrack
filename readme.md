@@ -58,6 +58,10 @@ If the keys are known from a previous attack, it is possible to use bkcrack to d
 
     rbkcrack -c cipherfile -k 12345678 23456789 34567890 -d decipheredfile
 
+**[Suggested]** If you want to decipher and decompress the whole file, you can use my custom [p7zip](https://github.com/Aloxaf/p7zip):
+
+    7za e cipher.zip '-p[d4f34b9d_a6ba3461_dcd97451]'
+
 ### Decompress
 
 The deciphered data might be compressed depending on whether compression was used or not when the zip file was created.
