@@ -12,7 +12,7 @@ args:
     short: p
     help: File containing the known plaintext
     takes_value: true
-    required: true
+    required_unless: key
 - key:
     short: k
     help: Internal password representation as three 32-bits integers in hexadecimal (requires -d)

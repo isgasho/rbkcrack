@@ -5,7 +5,7 @@ authors = ["Aloxaf <bailong104@gmail.com>"]
 description = "Crack legacy zip encryption with Biham and Kocher's known plaintext attack."
 documentation = "https://github.com/Aloxaf/rbkcrack"
 repository = "https://github.com/Aloxaf/rbkcrack"
-readme = "readme.md"
+readme = "README.md"
 keywords = ["zip", "crack"]
 license = "zlib"
 

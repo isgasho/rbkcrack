@@ -133,8 +133,8 @@ fn main() {
     let cipherarchive = matches.value_of("encryptedzip").unwrap_or("");
     let plainarchive = matches.value_of("plainzip").unwrap_or("");
 
-    let cipherfile = matches.value_of("cipherfile").unwrap();
-    let plainfile = matches.value_of("plainfile").unwrap();
+    let cipherfile = matches.value_of("cipherfile").unwrap_or("");
+    let plainfile = matches.value_of("plainfile").unwrap_or("");
     let offset = matches
         .value_of("offset")
         .unwrap_or("0")
