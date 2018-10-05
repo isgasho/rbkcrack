@@ -1,9 +1,9 @@
-use super::crc32_tab::Crc32Tab;
-use super::data::Data;
-use super::keys::Keys;
-use super::keystream_tab::KeystreamTab;
-use super::mult_tab::MultTab;
-use super::utils::*;
+use crc32_tab::Crc32Tab;
+use data::Data;
+use keys::Keys;
+use keystream_tab::KeystreamTab;
+use mult_tab::MultTab;
+use utils::*;
 
 pub struct Attack<'a> {
     z_list: [u32; 12],

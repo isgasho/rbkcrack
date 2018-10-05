@@ -1,4 +1,4 @@
-use super::utils::*;
+use utils::*;
 
 /// Lookup tables for keystream related computations
 pub struct KeystreamTab {

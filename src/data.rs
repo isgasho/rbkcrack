@@ -1,6 +1,6 @@
-use super::attack::*;
-use super::failure::Error;
-use super::file::*;
+use attack::Attack;
+use failure::Error;
+use file::*;
 use std::usize;
 
 pub struct Data {

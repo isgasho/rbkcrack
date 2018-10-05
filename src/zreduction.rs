@@ -1,7 +1,7 @@
-use super::attack::Attack;
-use super::crc32_tab::Crc32Tab;
-use super::keystream_tab::KeystreamTab;
-use super::progress;
+use attack::Attack;
+use crc32_tab::Crc32Tab;
+use keystream_tab::KeystreamTab;
+use progress;
 use std::mem;
 
 pub struct Zreduction<'a> {

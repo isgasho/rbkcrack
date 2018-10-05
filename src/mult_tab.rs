@@ -1,4 +1,4 @@
-use super::utils::*;
+use utils::*;
 
 /// Lookup tables for multiplication related computations
 pub struct MultTab {

@@ -1,15 +1,12 @@
 use failure::Error;
 use std::fs::{metadata, File};
-use std::io::prelude::*;
+use std::io::prelude::Seek;
 use std::io::SeekFrom;
+use podio::ReadPodExt;
 use zip::ZipArchive;
 
-fn load_stream(stream: File, size: u64) -> Vec<u8> {
-    stream
-        .take(size)
-        .bytes()
-        .map(|b| b.unwrap())
-        .collect::<Vec<_>>()
+fn load_stream(stream: &mut File, size: u64) -> Result<Vec<u8>, Error> {
+    Ok(stream.read_exact(size as usize)?)
 }
 
 pub fn open_raw_file(filename: &str, size: &mut usize) -> Result<File, Error> {
@@ -21,8 +18,8 @@ pub fn open_raw_file(filename: &str, size: &mut usize) -> Result<File, Error> {
 
 pub fn load_raw_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
     let mut real_size = 0;
-    let file = open_raw_file(filename, &mut real_size)?;
-    let bytes = load_stream(file, size.min(real_size) as u64);
+    let mut file = open_raw_file(filename, &mut real_size)?;
+    let bytes = load_stream(&mut file, size.min(real_size) as u64)?;
     Ok(bytes)
 }
 
@@ -45,8 +42,8 @@ pub fn open_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> R
 
 pub fn load_zip_entry(archivename: &str, entryname: &str, size: usize) -> Result<Vec<u8>, Error> {
     let mut real_size = 0;
-    let file = open_zip_entry(archivename, entryname, &mut real_size)?;
-    let bytes = load_stream(file, size.min(real_size) as u64);
+    let mut file = open_zip_entry(archivename, entryname, &mut real_size)?;
+    let bytes = load_stream(&mut file, size.min(real_size) as u64)?;
     Ok(bytes)
 }
 
