@@ -72,7 +72,7 @@ impl<'a> Zreduction<'a> {
             //std::process::exit(1);
 
             // remove duplicates
-            zim1_2_32_vector.sort();
+            zim1_2_32_vector.sort_unstable();
             zim1_2_32_vector.dedup();
 
             // update smallest vector tracking
