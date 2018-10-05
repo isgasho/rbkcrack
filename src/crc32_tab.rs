@@ -1,4 +1,4 @@
-use super::utils::*;
+use utils::*;
 
 /// Lookup tables for CRC32 related computations
 pub struct Crc32Tab {

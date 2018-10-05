@@ -3,6 +3,7 @@ extern crate failure;
 #[macro_use]
 extern crate log;
 extern crate chrono;
+extern crate podio;
 extern crate zip;
 
 mod attack;
@@ -16,11 +17,11 @@ mod zreduction;
 
 pub mod file;
 
-pub use self::attack::Attack;
-pub use self::data::Data;
-pub use self::keys::Keys;
-pub use self::keystream_tab::KeystreamTab;
-pub use self::zreduction::Zreduction;
+pub use attack::Attack;
+pub use data::Data;
+pub use keys::Keys;
+pub use keystream_tab::KeystreamTab;
+pub use zreduction::Zreduction;
 
 #[inline]
 pub fn progress(done: usize, total: usize) {
