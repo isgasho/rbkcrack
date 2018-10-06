@@ -1,8 +1,8 @@
 use failure::Error;
+use podio::ReadPodExt;
 use std::fs::{metadata, File};
 use std::io::prelude::Seek;
 use std::io::SeekFrom;
-use podio::ReadPodExt;
 use zip::ZipArchive;
 
 fn load_stream(stream: &mut File, size: u64) -> Result<Vec<u8>, Error> {
@@ -36,7 +36,7 @@ pub fn open_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> R
 
     reader.seek(SeekFrom::Start(data.data_start))?;
     *size = data.compressed_size as usize;
-    debug!("file:{} size: {}", entryname, size);
+    debug!("Found! size: {}", size);
     Ok(reader)
 }
 

@@ -2,14 +2,18 @@ use attack::Attack;
 use crc32_tab::Crc32Tab;
 use keystream_tab::KeystreamTab;
 use progress;
+use rayon::prelude::*;
 use std::mem;
 
 pub struct Zreduction<'a> {
     keystream: &'a [u8],
     zi_2_32_vector: Vec<u32>,
     index: usize,
-    keystreamtab: KeystreamTab,
-    crc32tab: Crc32Tab,
+}
+
+lazy_static! {
+    static ref KEYSTREAMTAB: KeystreamTab = KeystreamTab::new();
+    static ref CRC32TAB: Crc32Tab = Crc32Tab::new();
 }
 
 impl<'a> Zreduction<'a> {
@@ -22,8 +26,6 @@ impl<'a> Zreduction<'a> {
             zi_2_32_vector: Vec::new(),
             keystream,
             index: 0,
-            keystreamtab: KeystreamTab::new(),
-            crc32tab: Crc32Tab::new(),
         }
     }
 
@@ -31,8 +33,7 @@ impl<'a> Zreduction<'a> {
         self.index = self.keystream.len();
         self.zi_2_32_vector.reserve(1 << 22);
 
-        for &zi_2_16 in self
-            .keystreamtab
+        for &zi_2_16 in KEYSTREAMTAB
             .get_zi_2_16_array(*self.keystream.last().unwrap())
             .iter()
         {
@@ -58,12 +59,10 @@ impl<'a> Zreduction<'a> {
             // generate the Z{i-1}[2,32) values
             for &zi_2_32 in &self.zi_2_32_vector {
                 // get Z{i-1}[10,32) from CRC32^-1
-                let zim1_10_32 = self.crc32tab.get_zim1_10_32(zi_2_32);
+                let zim1_10_32 = CRC32TAB.get_zim1_10_32(zi_2_32);
 
                 // get Z{i-1}[2,16) values from keystream byte k{i-1} and Z{i-1}[10,16)
-                for &zim1_2_16 in self
-                    .keystreamtab
-                    .get_zi_2_16_vector(self.keystream[i - 1], zim1_10_32)
+                for &zim1_2_16 in KEYSTREAMTAB.get_zi_2_16_vector(self.keystream[i - 1], zim1_10_32)
                 {
                     //println!("({} {})", zi_2_32, zim1_10_32);
                     zim1_2_32_vector.push(zim1_10_32 | zim1_2_16);
@@ -72,7 +71,7 @@ impl<'a> Zreduction<'a> {
             //std::process::exit(1);
 
             // remove duplicates
-            zim1_2_32_vector.sort_unstable();
+            zim1_2_32_vector.par_sort_unstable();
             zim1_2_32_vector.dedup();
 
             // update smallest vector tracking

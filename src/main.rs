@@ -13,8 +13,7 @@ extern crate rbkcrack;
 use chrono::Local;
 use clap::App;
 use failure::Error;
-use flate2::read::DeflateDecoder;
-use podio::WritePodExt;
+use flate2::write::DeflateDecoder;
 use rbkcrack::{file, progress, Attack, Data, Keys, KeystreamTab, Zreduction};
 use std::io::prelude::*;
 use std::process;
@@ -111,13 +110,11 @@ fn decipher(
         keys.update(p);
         vec.push(p);
     }
-
-    debug!("decompressing");
+    debug!("deciphered: {} bytes", vec.len());
     if unzip {
-        let deflater = DeflateDecoder::new(&vec[..]);
-        for b in deflater.bytes() {
-            decipheredstream.write_u8(b.unwrap())?;
-        }
+        debug!("decompressing");
+        let mut deflater = DeflateDecoder::new(decipheredstream);
+        deflater.write_all(&vec)?;
     } else {
         decipheredstream.write_all(&vec)?;
     }

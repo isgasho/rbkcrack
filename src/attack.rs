@@ -11,8 +11,11 @@ pub struct Attack<'a> {
     x_list: [u32; 12],
     data: &'a Data,
     index: usize,
-    multtab: MultTab,
-    crc32tab: Crc32Tab,
+}
+
+lazy_static! {
+    static ref MULTTAB: MultTab = MultTab::new();
+    static ref CRC32TAB: Crc32Tab = Crc32Tab::new();
 }
 
 impl<'a> Attack<'a> {
@@ -25,8 +28,6 @@ impl<'a> Attack<'a> {
             x_list: [0; 12],
             data,
             index,
-            multtab: MultTab::new(),
-            crc32tab: Crc32Tab::new(),
         }
     }
 
@@ -58,7 +59,7 @@ impl<'a> Attack<'a> {
             let i = i as usize;
 
             // get Z{i-1}[10,32) from CRC32^-1
-            let zim1_10_32 = self.crc32tab.get_zim1_10_32(self.z_list[i]);
+            let zim1_10_32 = CRC32TAB.get_zim1_10_32(self.z_list[i]);
 
             // get Z{i-1}[2,16) values from keystream byte k{i-1} and Z{i-1}[10,16)
             for &zim1_2_16 in KeystreamTab::new()
@@ -69,14 +70,11 @@ impl<'a> Attack<'a> {
 
                 // find Zi[0,2) from Crc32^1
                 self.z_list[i] &= MASK_2_32;
-                self.z_list[i] |=
-                    (self.crc32tab.crc32inv(self.z_list[i], 0) ^ self.z_list[i - 1]) >> 8;
+                self.z_list[i] |= (CRC32TAB.crc32inv(self.z_list[i], 0) ^ self.z_list[i - 1]) >> 8;
 
                 // get Y{i+1}[24,32)
                 if i < 11 {
-                    self.y_list[i + 1] = self
-                        .crc32tab
-                        .get_yi_24_32(self.z_list[i + 1], self.z_list[i]);
+                    self.y_list[i + 1] = CRC32TAB.get_yi_24_32(self.z_list[i + 1], self.z_list[i]);
                 }
 
                 if self.explore_z_lists(i as i32 - 1) {
@@ -90,16 +88,15 @@ impl<'a> Attack<'a> {
             // the Z-list is complete so iterate over possible Y values
 
             // guess Y11[8,24) and keep prod == (Y11[8,32) - 1) * mult^-1
-            let mut prod = (self.multtab.get_multinv(msb(self.y_list[11])) << 24)
-                .wrapping_sub(MultTab::MULTINV);
+            let mut prod =
+                (MULTTAB.get_multinv(msb(self.y_list[11])) << 24).wrapping_sub(MultTab::MULTINV);
             for y11_8_24 in (0..(1 << 24)).step_by(1 << 8) {
                 // get possible Y11[0,8) values
-                for y11_0_8 in self
-                    .multtab
-                    .get_msb_prod_fiber3(msb(self.y_list[10]).wrapping_sub(msb(prod)))
+                for &y11_0_8 in
+                    MULTTAB.get_msb_prod_fiber3(msb(self.y_list[10]).wrapping_sub(msb(prod)))
                 {
                     // filter Y11[0,8) using Y10[24,32)
-                    if prod + self.multtab.get_multinv(y11_0_8) - (self.y_list[10] & MASK_24_32)
+                    if prod + MULTTAB.get_multinv(y11_0_8) - (self.y_list[10] & MASK_24_32)
                         <= MAXDIFF_0_24
                     {
                         self.y_list[11] =
@@ -126,16 +123,15 @@ impl<'a> Attack<'a> {
             let ffy: u32 = (fy - 1).wrapping_mul(MultTab::MULTINV);
 
             // get possible LSB(Xi)
-            for xi_0_8 in self
-                .multtab
-                .get_msb_prod_fiber2(msb(ffy.wrapping_sub(self.y_list[i - 2] & MASK_24_32)))
+            for &xi_0_8 in
+                MULTTAB.get_msb_prod_fiber2(msb(ffy.wrapping_sub(self.y_list[i - 2] & MASK_24_32)))
             {
                 // compute corresponding Y{i-1}
                 let yim1 = fy - u32::from(xi_0_8);
 
                 // filter values with Y{i-2}[24,32)
                 if ffy
-                    .wrapping_sub(self.multtab.get_multinv(xi_0_8))
+                    .wrapping_sub(MULTTAB.get_multinv(xi_0_8))
                     .wrapping_sub(self.y_list[i - 2] & MASK_24_32)
                     <= MAXDIFF_0_24
                     && msb(yim1) == msb(self.y_list[i - 1])
@@ -161,7 +157,7 @@ impl<'a> Attack<'a> {
     fn test_x_list(&mut self) -> bool {
         // compute X7
         for i in 5..=7 {
-            self.x_list[i] = (self.crc32tab.crc32(self.x_list[i-1], self.data.plaintext[self.index+i-1])
+            self.x_list[i] = (CRC32TAB.crc32(self.x_list[i-1], self.data.plaintext[self.index+i-1])
                 & MASK_8_32) // discard the LSB
                 | u32::from(lsb(self.x_list[i])); // set the LSB
         }
@@ -170,9 +166,7 @@ impl<'a> Attack<'a> {
 
         // compare 4 LSB(Xi) obtained from plaintext with those from the X-list
         for i in 8..=11 {
-            x = self
-                .crc32tab
-                .crc32(x, self.data.plaintext[self.index + i - 1]);
+            x = CRC32TAB.crc32(x, self.data.plaintext[self.index + i - 1]);
             if lsb(x) != lsb(self.x_list[i]) {
                 //println!("4");
                 return false;
@@ -182,13 +176,11 @@ impl<'a> Attack<'a> {
         // compute X3
         let mut x = self.x_list[7];
         for i in (3..=6).rev() {
-            x = self
-                .crc32tab
-                .crc32inv(x, self.data.plaintext[self.index + i]);
+            x = CRC32TAB.crc32inv(x, self.data.plaintext[self.index + i]);
         }
 
         // check that X3 fits with Y1[26,32)
-        let y1_26_32 = self.crc32tab.get_yi_24_32(self.z_list[1], self.z_list[0]) & MASK_26_32;
+        let y1_26_32 = CRC32TAB.get_yi_24_32(self.z_list[1], self.z_list[0]) & MASK_26_32;
         if ((self.y_list[3] - 1).wrapping_mul(MultTab::MULTINV) - u32::from(lsb(x)) - 1)
             .wrapping_mul(MultTab::MULTINV)
             - y1_26_32
