@@ -43,13 +43,13 @@ impl MultTab {
 
     /// return a vector of bytes x such that
     /// msb(x*mult^-1) is equal to msbprod or msbprod-1
-    pub fn get_msb_prod_fiber2(&self, msbprodinv: u8) -> Vec<u8> {
-        self.msbprodfiber2[msbprodinv as usize].clone()
+    pub fn get_msb_prod_fiber2(&self, msbprodinv: u8) -> &Vec<u8> {
+        &self.msbprodfiber2[msbprodinv as usize]
     }
 
     /// return a vector of bytes x such that
     /// msb(x*mult^-1) is equal to msbprod, msbprod-1 or msbprod+1
-    pub fn get_msb_prod_fiber3(&self, msbprodinv: u8) -> Vec<u8> {
-        self.msbprodfiber3[msbprodinv as usize].clone()
+    pub fn get_msb_prod_fiber3(&self, msbprodinv: u8) -> &Vec<u8> {
+        &self.msbprodfiber3[msbprodinv as usize]
     }
 }

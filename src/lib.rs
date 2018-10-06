@@ -1,9 +1,12 @@
 #[macro_use]
 extern crate failure;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate log;
 extern crate chrono;
 extern crate podio;
+extern crate rayon;
 extern crate zip;
 
 mod attack;
