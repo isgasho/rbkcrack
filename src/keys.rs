@@ -1,7 +1,7 @@
-use crc32_tab::Crc32Tab;
-use keystream_tab::KeystreamTab;
-use mult_tab::MultTab;
-use utils::*;
+use crate::crc32_tab::Crc32Tab;
+use crate::keystream_tab::KeystreamTab;
+use crate::mult_tab::MultTab;
+use crate::utils::*;
 
 /// Keys defining the cipher state
 pub struct Keys {

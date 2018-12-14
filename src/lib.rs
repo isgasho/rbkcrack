@@ -1,14 +1,3 @@
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-extern crate chrono;
-extern crate podio;
-extern crate rayon;
-extern crate zip;
-
 mod attack;
 mod crc32_tab;
 mod data;
@@ -20,11 +9,11 @@ mod zreduction;
 
 pub mod file;
 
-pub use attack::Attack;
-pub use data::Data;
-pub use keys::Keys;
-pub use keystream_tab::KeystreamTab;
-pub use zreduction::Zreduction;
+pub use crate::attack::Attack;
+pub use crate::data::Data;
+pub use crate::keys::Keys;
+pub use crate::keystream_tab::KeystreamTab;
+pub use crate::zreduction::Zreduction;
 
 #[inline]
 pub fn progress(done: usize, total: usize) {

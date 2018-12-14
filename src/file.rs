@@ -1,4 +1,5 @@
 use failure::Error;
+use log::debug;
 use podio::ReadPodExt;
 use std::fs::{metadata, File};
 use std::io::prelude::Seek;
