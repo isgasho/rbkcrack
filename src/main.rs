@@ -1,19 +1,8 @@
-#[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate failure;
-extern crate chrono;
-extern crate flate2;
-#[macro_use]
-extern crate log;
-extern crate env_logger;
-extern crate podio;
-extern crate rbkcrack;
-
 use chrono::Local;
-use clap::App;
-use failure::Error;
+use clap::{load_yaml, App};
+use failure::{format_err, Error};
 use flate2::write::DeflateDecoder;
+use log::debug;
 use rbkcrack::{file, progress, Attack, Data, Keys, KeystreamTab, Zreduction};
 use std::io::prelude::*;
 use std::process;

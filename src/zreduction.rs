@@ -1,7 +1,8 @@
-use attack::Attack;
-use crc32_tab::Crc32Tab;
-use keystream_tab::KeystreamTab;
-use progress;
+use crate::attack::Attack;
+use crate::crc32_tab::Crc32Tab;
+use crate::keystream_tab::KeystreamTab;
+use crate::progress;
+use lazy_static::lazy_static;
 use rayon::prelude::*;
 use std::mem;
 

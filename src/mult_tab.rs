@@ -1,4 +1,4 @@
-use utils::*;
+use crate::utils::*;
 
 /// Lookup tables for multiplication related computations
 pub struct MultTab {

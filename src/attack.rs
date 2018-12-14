@@ -1,9 +1,10 @@
-use crc32_tab::Crc32Tab;
-use data::Data;
-use keys::Keys;
-use keystream_tab::KeystreamTab;
-use mult_tab::MultTab;
-use utils::*;
+use crate::crc32_tab::Crc32Tab;
+use crate::data::Data;
+use crate::keys::Keys;
+use crate::keystream_tab::KeystreamTab;
+use crate::mult_tab::MultTab;
+use crate::utils::*;
+use lazy_static::lazy_static;
 
 pub struct Attack<'a> {
     z_list: [u32; 12],
