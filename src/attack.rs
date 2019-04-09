@@ -209,6 +209,7 @@ mod tests {
             "./example/plain.zip",
             "file",
             0,
+            std::usize::MAX,
         )
         .unwrap();
         let mut attack = Attack::new(&data, 735115);
@@ -235,6 +236,7 @@ mod tests {
             "./example/plain.zip",
             "file",
             0,
+            std::usize::MAX,
         )
         .unwrap();
         let mut attack = Attack::new(&data, 735115);
@@ -261,6 +263,7 @@ mod tests {
             "./example/plain.zip",
             "file",
             0,
+            std::usize::MAX,
         )
         .unwrap();
         let mut attack = Attack::new(&data, 735115);
