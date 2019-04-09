@@ -54,8 +54,10 @@ impl<'a> Zreduction<'a> {
         let mut waiting = false;
         let mut wait = 0usize;
 
+        let mut zim1_2_32_vector = Vec::new();
+
         for i in (Attack::SIZE..self.index).rev() {
-            let mut zim1_2_32_vector = Vec::new();
+            zim1_2_32_vector.clear();
 
             // generate the Z{i-1}[2,32) values
             for &zi_2_32 in &self.zi_2_32_vector {
@@ -86,7 +88,7 @@ impl<'a> Zreduction<'a> {
                 if best_index == i {
                     // hit a minimum
                     // keep a copy of the vector because size is about to grow
-                    best_copy = self.zi_2_32_vector.clone();
+                    std::mem::swap(&mut best_copy, &mut self.zi_2_32_vector);
 
                     if best_size <= Zreduction::WAIT_SIZE {
                         // enable waiting
