@@ -15,6 +15,7 @@ pub use crate::keys::Keys;
 pub use crate::keystream_tab::KeystreamTab;
 pub use crate::zreduction::Zreduction;
 
+// TODO: 需要 lock 吗?
 #[inline]
 pub fn progress(done: usize, total: usize) {
     print!(
@@ -38,6 +39,7 @@ mod tests {
             "./example/plain.zip",
             "file",
             0,
+            std::usize::MAX,
         )
         .unwrap();
 

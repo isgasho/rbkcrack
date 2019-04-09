@@ -2,6 +2,8 @@ use crate::crc32_tab::Crc32Tab;
 use crate::keystream_tab::KeystreamTab;
 use crate::mult_tab::MultTab;
 use crate::utils::*;
+use std::fmt;
+use std::iter::FromIterator;
 
 /// Keys defining the cipher state
 pub struct Keys {
@@ -15,6 +17,25 @@ pub struct Keys {
 impl Default for Keys {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl FromIterator<u32> for Keys {
+    fn from_iter<I: IntoIterator<Item = u32>>(iter: I) -> Self {
+        let mut key = Keys::new();
+        let mut iter = iter.into_iter();
+        key.set_keys(
+            iter.next().unwrap(),
+            iter.next().unwrap(),
+            iter.next().unwrap(),
+        );
+        key
+    }
+}
+
+impl fmt::Display for Keys {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:08x} {:08x} {:08x}", self.x, self.y, self.z)
     }
 }
 

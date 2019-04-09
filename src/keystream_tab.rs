@@ -5,6 +5,8 @@ pub struct KeystreamTab {
     keystreamtab: [u8; 1 << 14],
     keystreaminvtab: [[u32; 64]; 256],
     keystreaminvfiltertab: Vec<Vec<Vec<u32>>>, //[[Vec<u32>; 64]; 256]
+    // TODO: bitset
+    keystreaminvexists: [[bool; 64]; 256],
 }
 
 impl KeystreamTab {
@@ -15,6 +17,7 @@ impl KeystreamTab {
             keystreaminvfiltertab: (0..256)
                 .map(|_| (0..64).map(|_| vec![]).collect::<Vec<_>>())
                 .collect::<Vec<_>>(),
+            keystreaminvexists: [[false; 64]; 256],
         };
 
         let mut next = [0; 256];
@@ -23,6 +26,7 @@ impl KeystreamTab {
             keystreamtab.keystreamtab[(z_2_16 >> 2) as usize] = k;
             keystreamtab.keystreaminvtab[k as usize][next[k as usize]] = z_2_16;
             keystreamtab.keystreaminvfiltertab[k as usize][(z_2_16 >> 10) as usize].push(z_2_16);
+            keystreamtab.keystreaminvexists[k as usize][(z_2_16 >> 10) as usize] = true;
             next[k as usize] += 1;
         }
 
@@ -49,6 +53,11 @@ impl KeystreamTab {
     #[inline]
     pub fn get_zi_2_16_vector(&self, ki: u8, zi_10_16: u32) -> &Vec<u32> {
         &self.keystreaminvfiltertab[ki as usize][((zi_10_16 & MASK_0_16) >> 10) as usize]
+    }
+
+    #[inline]
+    pub fn has_zi_2_16(&self, ki: u8, zi_10_16: u32) -> bool {
+        self.keystreaminvexists[ki as usize][((zi_10_16 & MASK_0_16) >> 10) as usize]
     }
 }
 

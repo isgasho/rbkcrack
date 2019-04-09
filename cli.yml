@@ -31,6 +31,13 @@ args:
     short: o
     help: Known plaintext offset relative to ciphertext without encryption header (may be negative)
     takes_value: true
+- plainsize:
+    short: t
+    help: Maximum number of bytes of plaintext to read
+    takes_value: true
+- exhaustive:
+    short: exhaustive
+    help: Exhaustively try all the keys remaining after Z reduction
 - decipheredfile:
     short: d
     help: File to write the deciphered text
