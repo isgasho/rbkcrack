@@ -54,16 +54,29 @@ impl<'a> Zreduction<'a> {
         let mut waiting = false;
         let mut wait = 0usize;
 
+        let mut zim1_10_32_vector = Vec::new();
         let mut zim1_2_32_vector = Vec::new();
 
         for i in (Attack::SIZE..self.index).rev() {
+            zim1_10_32_vector.clear();
             zim1_2_32_vector.clear();
 
-            // generate the Z{i-1}[2,32) values
+            // generate the Z{i-1}[10,32) values
             for &zi_2_32 in &self.zi_2_32_vector {
                 // get Z{i-1}[10,32) from CRC32^-1
                 let zim1_10_32 = CRC32TAB.get_zim1_10_32(zi_2_32);
+                // collect only those that are compatible with keystream{i-1}
+                if KEYSTREAMTAB.has_zi_2_16(self.keystream[i - 1], zim1_10_32) {
+                    zim1_10_32_vector.push(zim1_10_32);
+                }
+            }
 
+            // remove duplicates
+            zim1_10_32_vector.par_sort_unstable();
+            zim1_10_32_vector.dedup();
+
+            // complete Z{i-1}[10,32) values up to Z{i-1}[2,32)
+            for &zim1_10_32 in &zim1_10_32_vector {
                 // get Z{i-1}[2,16) values from keystream byte k{i-1} and Z{i-1}[10,16)
                 for &zim1_2_16 in KEYSTREAMTAB.get_zi_2_16_vector(self.keystream[i - 1], zim1_10_32)
                 {
@@ -72,10 +85,6 @@ impl<'a> Zreduction<'a> {
                 }
             }
             //std::process::exit(1);
-
-            // remove duplicates
-            zim1_2_32_vector.par_sort_unstable();
-            zim1_2_32_vector.dedup();
 
             // update smallest vector tracking
             if zim1_2_32_vector.len() <= best_size {

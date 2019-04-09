@@ -2,7 +2,6 @@ use crate::attack::Attack;
 use crate::file::*;
 use failure::{format_err, Error};
 use log::debug;
-use std::usize;
 
 pub struct Data {
     pub ciphertext: Vec<u8>,
@@ -20,6 +19,7 @@ impl Data {
         plainarchive: &str,
         plainfile: &str,
         offset: i32,
+        plainsize: usize,
     ) -> Result<Data, Error> {
         // check that offset is not too small
         if Data::HEADER_SIZE as i32 + offset < 0 {
@@ -28,9 +28,9 @@ impl Data {
 
         // load known plaintext
         let plaintext = if plainarchive.is_empty() {
-            load_raw_file(plainfile, usize::MAX)?
+            load_raw_file(plainfile, plainsize)?
         } else {
-            load_zip_entry(plainarchive, plainfile, usize::MAX)?
+            load_zip_entry(plainarchive, plainfile, plainsize)?
         };
         debug!("loaded plain {}, size {}", plainarchive, plaintext.len());
         // check that plaintext is big enough

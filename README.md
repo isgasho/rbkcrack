@@ -84,6 +84,8 @@ You can also use `-u` option to enable decompress
 Learn
 -----
 
+A tutorial is provided in the `example` folder.
+
 For more information, have a look at the documentation and read the source.
 
 Contribute
