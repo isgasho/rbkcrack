@@ -33,7 +33,7 @@ impl Data {
             };
         debug!(
             "loaded plain {}, size {}",
-            args.plainzip.as_ref().unwrap(),
+            args.plainfile.as_ref().unwrap(),
             plaintext.len()
         );
         // check that plaintext is big enough
@@ -50,7 +50,7 @@ impl Data {
         };
         debug!(
             "loaded cipher {}, size {}",
-            args.encryptedzip.as_ref().unwrap(),
+            args.cipherfile,
             ciphertext.len()
         );
 
