@@ -1,5 +1,6 @@
 use crate::attack::Attack;
 use crate::file::*;
+use crate::Arguments;
 use failure::{format_err, Error};
 use log::debug;
 
@@ -13,26 +14,27 @@ pub struct Data {
 impl Data {
     pub const HEADER_SIZE: usize = 12;
 
-    pub fn new(
-        cipherarchive: &str,
-        cipherfile: &str,
-        plainarchive: &str,
-        plainfile: &str,
-        offset: i32,
-        plainsize: usize,
-    ) -> Result<Data, Error> {
+    pub fn new(args: &Arguments) -> Result<Data, Error> {
+        let offset = args.offset.unwrap_or(0);
+        let plainsize = args.plainsize.unwrap_or(std::usize::MAX);
+
         // check that offset is not too small
         if Data::HEADER_SIZE as i32 + offset < 0 {
             return Err(format_err!("offset is too small"));
         }
 
         // load known plaintext
-        let plaintext = if plainarchive.is_empty() {
-            load_raw_file(plainfile, plainsize)?
-        } else {
-            load_zip_entry(plainarchive, plainfile, plainsize)?
-        };
-        debug!("loaded plain {}, size {}", plainarchive, plaintext.len());
+        let plaintext =
+            if let (Some(archivename), Some(entryname)) = (&args.plainzip, &args.plainfile) {
+                load_zip_entry(archivename, entryname, plainsize)?
+            } else {
+                load_raw_file(args.plainfile.as_ref().unwrap(), plainsize)?
+            };
+        debug!(
+            "loaded plain {}, size {}",
+            args.plainzip.as_ref().unwrap(),
+            plaintext.len()
+        );
         // check that plaintext is big enough
         if plaintext.len() < Attack::SIZE {
             return Err(format_err!("plaintext is too small"));
@@ -40,12 +42,16 @@ impl Data {
 
         // load ciphertext needed by the attack
         let to_read = Data::HEADER_SIZE + offset as usize + plaintext.len();
-        let ciphertext = if cipherarchive.is_empty() {
-            load_raw_file(cipherfile, to_read)?
+        let ciphertext = if let Some(archivename) = &args.encryptedzip {
+            load_zip_entry(archivename, &args.cipherfile, to_read)?
         } else {
-            load_zip_entry(cipherarchive, cipherfile, to_read)?
+            load_raw_file(&args.cipherfile, to_read)?
         };
-        debug!("loaded cipher {}, size {}", cipherarchive, ciphertext.len());
+        debug!(
+            "loaded cipher {}, size {}",
+            args.encryptedzip.as_ref().unwrap(),
+            ciphertext.len()
+        );
 
         // check that ciphertext is valid
         if plaintext.len() > ciphertext.len() {
