@@ -43,7 +43,7 @@ pub struct Arguments {
     pub plainzip: Option<String>,
 
     /// Known plaintext offset relative to ciphertext without encryption header (may be negative)
-    #[structopt(short = "o")]
+    #[structopt(short = "o", allow_hyphen_values = true)]
     pub offset: Option<i32>,
 
     /// Maximum number of bytes of plaintext to read
