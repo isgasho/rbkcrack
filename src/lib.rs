@@ -7,6 +7,7 @@ pub use crate::data::Data;
 pub use crate::keys::Keys;
 pub use crate::keystream_tab::KeystreamTab;
 pub use crate::zreduction::Zreduction;
+use std::num::ParseIntError;
 
 mod attack;
 mod crc32_tab;
@@ -18,6 +19,10 @@ mod utils;
 mod zreduction;
 
 pub mod file;
+
+fn parse_hex(src: &str) -> Result<u32, ParseIntError> {
+    u32::from_str_radix(src, 16)
+}
 
 #[derive(StructOpt, Debug, Default)]
 #[structopt(name = "rbkcrack")]
@@ -31,7 +36,7 @@ pub struct Arguments {
     pub plainfile: Option<String>,
 
     /// Internal password representation as three 32-bits integers in hexadecimal (requires -d)
-    #[structopt(short = "k")]
+    #[structopt(short = "k", parse(try_from_str = "parse_hex"))]
     pub key: Vec<u32>,
 
     /// Zip archive containing cipherfile

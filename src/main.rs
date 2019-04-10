@@ -48,31 +48,39 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
 
     let keysvec = zr
         .get_zi_2_32_vector()
-        .into_par_iter()
-        .filter_map(|&z| {
-            if *should_stop.read().unwrap() {
-                return None;
-            }
+        // 将任务每 1000 个分为一组, 每组再并行检测
+        // 保证顺序大抵是从小到大的
+        .chunks(1000)
+        .map(|chunk| {
+            chunk
+                .into_par_iter()
+                .filter_map(|&z| {
+                    if *should_stop.read().unwrap() {
+                        return None;
+                    }
 
-            *done.lock().unwrap() += 1;
-            progress(*done.lock().unwrap(), size);
-            stdout().flush().unwrap();
+                    *done.lock().unwrap() += 1;
+                    progress(*done.lock().unwrap(), size);
+                    stdout().flush().unwrap();
 
-            let mut attack = attack.clone();
-            if attack.carry_out(z) {
-                let possible_keys = attack.get_keys();
+                    let mut attack = attack.clone();
+                    if attack.carry_out(z) {
+                        let possible_keys = attack.get_keys();
 
-                if args.exhaustive {
-                    println!("\rKeys: {}", possible_keys);
-                } else {
-                    *should_stop.write().unwrap() = true;
-                }
-                Some(possible_keys)
-            } else {
-                None
-            }
+                        if args.exhaustive {
+                            println!("\rKeys: {}", possible_keys);
+                        } else {
+                            *should_stop.write().unwrap() = true;
+                        }
+                        Some(possible_keys)
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<Keys>>()
         })
-        .collect::<Vec<Keys>>();
+        .flatten()
+        .collect::<Vec<_>>();
 
     if size != 0 {
         println!();
@@ -127,6 +135,8 @@ fn main() {
     env_logger::init();
 
     let args: Arguments = Arguments::from_args();
+
+    debug!("{:?}", args);
 
     let mut keysvec = vec![];
 
