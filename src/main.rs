@@ -48,7 +48,7 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
         if attack.carry_out(it) {
             let possible_keys = attack.get_keys();
 
-            if args.exhaustive {
+            if !args.exhaustive {
                 keysvec.push(possible_keys);
                 break;
             } else {
