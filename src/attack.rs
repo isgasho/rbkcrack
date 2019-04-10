@@ -18,6 +18,7 @@ pub struct Attack<'a> {
 lazy_static! {
     static ref MULTTAB: MultTab = MultTab::new();
     static ref CRC32TAB: Crc32Tab = Crc32Tab::new();
+    static ref KEYSTREAMTAB: KeystreamTab = KeystreamTab::new();
 }
 
 impl<'a> Attack<'a> {
@@ -64,7 +65,7 @@ impl<'a> Attack<'a> {
             let zim1_10_32 = CRC32TAB.get_zim1_10_32(self.z_list[i]);
 
             // get Z{i-1}[2,16) values from keystream byte k{i-1} and Z{i-1}[10,16)
-            for &zim1_2_16 in KeystreamTab::new()
+            for &zim1_2_16 in KEYSTREAMTAB
                 .get_zi_2_16_vector(self.data.keystream[self.index as usize + i - 1], zim1_10_32)
             {
                 // add Z{i-1}[2,32) to the Z-list
