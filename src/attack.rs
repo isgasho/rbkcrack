@@ -6,6 +6,7 @@ use crate::mult_tab::MultTab;
 use crate::utils::*;
 use lazy_static::lazy_static;
 
+#[derive(Debug, Clone)]
 pub struct Attack<'a> {
     z_list: [u32; 12],
     y_list: [u32; 12],
