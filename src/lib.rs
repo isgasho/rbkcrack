@@ -7,7 +7,6 @@ pub use crate::data::Data;
 pub use crate::keys::Keys;
 pub use crate::keystream_tab::KeystreamTab;
 pub use crate::zreduction::Zreduction;
-use std::io::{stdout, Write};
 
 mod attack;
 mod crc32_tab;
@@ -64,7 +63,6 @@ pub struct Arguments {
     pub unzip: bool,
 }
 
-// TODO: 需要 lock 吗?
 #[inline]
 pub fn progress(done: usize, total: usize) {
     print!(
@@ -73,7 +71,6 @@ pub fn progress(done: usize, total: usize) {
         done,
         total
     );
-    stdout().flush().unwrap();
 }
 
 #[cfg(test)]

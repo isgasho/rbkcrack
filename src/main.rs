@@ -7,6 +7,7 @@ use rbkcrack::{file, progress, Arguments, Attack, Data, Keys, KeystreamTab, Zred
 use structopt::StructOpt;
 
 use std::io::prelude::*;
+use std::io::stdout;
 use std::process;
 use std::sync::{Arc, Mutex, RwLock};
 
@@ -55,6 +56,7 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
 
             *done.lock().unwrap() += 1;
             progress(*done.lock().unwrap(), size);
+            stdout().flush().unwrap();
 
             let mut attack = attack.clone();
             if attack.carry_out(z) {
