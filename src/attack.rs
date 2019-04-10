@@ -200,17 +200,17 @@ impl<'a> Attack<'a> {
 mod tests {
     use super::Attack;
     use super::Data;
+    use crate::Arguments;
 
     #[test]
     fn test_x_list() {
-        let data = Data::new(
-            "./example/cipher.zip",
-            "file",
-            "./example/plain.zip",
-            "file",
-            0,
-            std::usize::MAX,
-        )
+        let data = Data::new(&Arguments {
+            encryptedzip: Some("./example/cipher.zip".into()),
+            cipherfile: "file".into(),
+            plainzip: Some("./example/plain.zip".into()),
+            plainfile: Some("file".into()),
+            ..Default::default()
+        })
         .unwrap();
         let mut attack = Attack::new(&data, 735115);
         attack.x_list = [
@@ -230,14 +230,13 @@ mod tests {
 
     #[test]
     fn explore_y_list() {
-        let data = Data::new(
-            "./example/cipher.zip",
-            "file",
-            "./example/plain.zip",
-            "file",
-            0,
-            std::usize::MAX,
-        )
+        let data = Data::new(&Arguments {
+            encryptedzip: Some("./example/cipher.zip".into()),
+            cipherfile: "file".into(),
+            plainzip: Some("./example/plain.zip".into()),
+            plainfile: Some("file".into()),
+            ..Default::default()
+        })
         .unwrap();
         let mut attack = Attack::new(&data, 735115);
         attack.x_list = [
@@ -257,14 +256,13 @@ mod tests {
 
     #[test]
     fn get_keys() {
-        let data = Data::new(
-            "./example/cipher.zip",
-            "file",
-            "./example/plain.zip",
-            "file",
-            0,
-            std::usize::MAX,
-        )
+        let data = Data::new(&Arguments {
+            encryptedzip: Some("./example/cipher.zip".into()),
+            cipherfile: "file".into(),
+            plainzip: Some("./example/plain.zip".into()),
+            plainfile: Some("file".into()),
+            ..Default::default()
+        })
         .unwrap();
         let mut attack = Attack::new(&data, 735115);
         attack.x_list[7] = 2807276851;
