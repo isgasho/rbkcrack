@@ -4,6 +4,7 @@ use crate::Arguments;
 use failure::{format_err, Error};
 use log::debug;
 
+#[derive(Debug, Clone)]
 pub struct Data {
     pub ciphertext: Vec<u8>,
     pub plaintext: Vec<u8>,

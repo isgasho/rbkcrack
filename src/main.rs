@@ -2,11 +2,13 @@ use chrono::Local;
 use failure::{format_err, Error};
 use flate2::write::DeflateDecoder;
 use log::debug;
+use rayon::prelude::*;
 use rbkcrack::{file, progress, Arguments, Attack, Data, Keys, KeystreamTab, Zreduction};
 use structopt::StructOpt;
 
 use std::io::prelude::*;
 use std::process;
+use std::sync::{Arc, Mutex, RwLock};
 
 fn now() -> String {
     Local::now().format("%T").to_string()
@@ -32,9 +34,9 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
     }
 
     // iterate over remaining Zi[2,32) values
-    let mut attack = Attack::new(&data, zr.get_index() + 1 - Attack::SIZE);
-    let mut done = 0;
-    let mut keysvec = vec![];
+    let attack = Attack::new(&data, zr.get_index() + 1 - Attack::SIZE);
+    let done = Arc::new(Mutex::new(0));
+    let should_stop = Arc::new(RwLock::new(false));
     let size = zr.size();
     println!(
         "[{}] Attack on {} Z values at index {}",
@@ -43,22 +45,32 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
         data.offset + zr.get_index() as i32
     );
 
-    // TODO: 并行
-    for &it in zr.get_zi_2_32_vector() {
-        if attack.carry_out(it) {
-            let possible_keys = attack.get_keys();
-
-            if !args.exhaustive {
-                keysvec.push(possible_keys);
-                break;
-            } else {
-                println!("\nKeys: {}", possible_keys);
-                keysvec.push(possible_keys);
+    let keysvec = zr
+        .get_zi_2_32_vector()
+        .into_par_iter()
+        .filter_map(|&z| {
+            if *should_stop.read().unwrap() {
+                return None;
             }
-        }
-        done += 1;
-        progress(done, size);
-    }
+
+            *done.lock().unwrap() += 1;
+            progress(*done.lock().unwrap(), size);
+
+            let mut attack = attack.clone();
+            if attack.carry_out(z) {
+                let possible_keys = attack.get_keys();
+
+                if args.exhaustive {
+                    println!("\rKeys: {}", possible_keys);
+                } else {
+                    *should_stop.write().unwrap() = true;
+                }
+                Some(possible_keys)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<Keys>>();
 
     if size != 0 {
         println!();
