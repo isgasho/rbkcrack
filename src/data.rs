@@ -25,7 +25,7 @@ impl Data {
         let mut plain_text;
         let mut cipher_text;
 
-        if args.auto {
+        if args.auto_find {
             let (a, b) = auto_load_file(
                 args.plain_zip.as_ref().unwrap(),
                 args.cipher_zip.as_ref().unwrap(),

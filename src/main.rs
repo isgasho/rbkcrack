@@ -136,8 +136,8 @@ fn run() -> Result<(), Error> {
 
     let mut keysvec = vec![];
 
-    if args.key.len() == 3 {
-        keysvec.push(args.key.iter().cloned().collect::<Keys>());
+    if args.keys.len() == 3 {
+        keysvec.push(args.keys.iter().cloned().collect::<Keys>());
     } else {
         let result = find_keys(&args)?;
         if !result.is_empty() {

@@ -16,9 +16,11 @@
 
     rbkcrack -C encrypted.zip -c cipher -P plain.zip -p plain
 
-或者使用 `-a` 开关根据 CRC32 值自动进行明文攻击
+**[推荐]** 或者使用 `-a` 开关根据 CRC32 值自动寻找文件进行明文攻击
 
     rbkcrack -C encrypted.zip -P plain.zip -a
+    
+在目前没有 GBK 支持的情况下, 当文件名是 GBK 编码时, `-a` 开关可以省下大量时间
 
 #### 攻击原始数据(?)
 

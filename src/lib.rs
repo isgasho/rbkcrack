@@ -28,52 +28,58 @@ fn parse_hex(src: &str) -> Result<u32, ParseIntError> {
 #[structopt(name = "rbkcrack")]
 pub struct Arguments {
     /// File containing the ciphertext
-    #[structopt(short = "c", required_unless = "auto", allow_hyphen_values = true)]
+    #[structopt(
+        short = "c",
+        long,
+        required_unless = "auto_find",
+        allow_hyphen_values = true
+    )]
     pub cipher_file: Option<String>,
 
     /// File containing the known plaintext
     #[structopt(
         short = "p",
-        raw(required_unless_one = r#"&["key", "auto"]"#),
+        long,
+        raw(required_unless_one = r#"&["keys", "auto_find"]"#),
         allow_hyphen_values = true
     )]
     pub plain_file: Option<String>,
 
     /// Internal password representation as three 32-bits integers in hexadecimal (requires -d)
-    #[structopt(short = "k", parse(try_from_str = "parse_hex"))]
-    pub key: Vec<u32>,
+    #[structopt(short = "k", long, parse(try_from_str = "parse_hex"))]
+    pub keys: Vec<u32>,
 
     /// Zip archive containing cipher_file
-    #[structopt(short = "C")]
+    #[structopt(short = "C", long)]
     pub cipher_zip: Option<String>,
 
     /// Zip archive containing plain_file
-    #[structopt(short = "P")]
+    #[structopt(short = "P", long)]
     pub plain_zip: Option<String>,
 
     /// Known plaintext offset relative to ciphertext without encryption header (may be negative)
-    #[structopt(short = "o", allow_hyphen_values = true)]
+    #[structopt(short = "o", long, allow_hyphen_values = true)]
     pub offset: Option<i32>,
 
     /// Maximum number of bytes of plaintext to read
-    #[structopt(short = "t")]
+    #[structopt(short = "t", long)]
     pub plain_size: Option<usize>,
 
     /// Exhaustively try all the keys remaining after Z reduction
-    #[structopt(short = "e")]
+    #[structopt(short = "e", long)]
     pub exhaustive: bool,
 
     /// File to write the deciphered text
-    #[structopt(short = "d")]
+    #[structopt(short = "d", long)]
     pub deciphered_file: Option<String>,
 
     /// Not only decipher but also unzip
-    #[structopt(short = "u")]
+    #[structopt(short = "u", long)]
     pub unzip: bool,
 
     /// Find entry by CRC32 automatically
-    #[structopt(short = "a")]
-    pub auto: bool,
+    #[structopt(short = "a", long)]
+    pub auto_find: bool,
 }
 
 #[inline]
