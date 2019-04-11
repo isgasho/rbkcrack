@@ -26,7 +26,7 @@ Install
 Build and install it with [Cargo](https://doc.rust-lang.org/cargo).
 
 ```shell
-cargo install --git https://github.com/Aloxaf/rbkcrack
+RUSTFLAGS='-C target_cpu=native' cargo install --git https://github.com/Aloxaf/rbkcrack
 ```
 
 Usage ([中文版](https://github.com/Aloxaf/rbkcrack/blob/master/README_CN.md))
