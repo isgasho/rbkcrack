@@ -28,11 +28,11 @@ fn parse_hex(src: &str) -> Result<u32, ParseIntError> {
 #[structopt(name = "rbkcrack")]
 pub struct Arguments {
     /// File containing the ciphertext
-    #[structopt(short = "c")]
+    #[structopt(short = "c", allow_hyphen_values = true)]
     pub cipherfile: String,
 
     /// File containing the known plaintext
-    #[structopt(short = "p", required_unless = "key")]
+    #[structopt(short = "p", required_unless = "key", allow_hyphen_values = true)]
     pub plainfile: Option<String>,
 
     /// Internal password representation as three 32-bits integers in hexadecimal (requires -d)

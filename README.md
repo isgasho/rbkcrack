@@ -10,7 +10,7 @@ Crack legacy zip encryption with Biham and Kocher's known plaintext attack.
 Difference from bkcrack
 -----------------------
 
-Not much, except that rbkcrack will ignore ZIP64 file in a zip file more than 4GB.
+Not much, except that rbkcrack supports ZIP64 file (thanks to zip-rs crate).
 
 In most cases, using bkcrack is a better choice.
 Because I haven't fully test rbkcrack, it's just a toy for practicing Rust. 
