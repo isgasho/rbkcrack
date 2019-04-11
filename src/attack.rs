@@ -44,7 +44,7 @@ impl<'a> Attack<'a> {
         keys.set_keys(self.x_list[7], self.y_list[7], self.z_list[7]);
 
         // println!("({})", self.data.ciphertext[0]);
-        for &i in self.data.ciphertext
+        for &i in self.data.cipher_text
             [0..(Data::HEADER_SIZE + self.data.offset as usize + self.index + 7)]
             .iter()
             .rev()
@@ -160,7 +160,7 @@ impl<'a> Attack<'a> {
     fn test_x_list(&mut self) -> bool {
         // compute X7
         for i in 5..=7 {
-            self.x_list[i] = (CRC32TAB.crc32(self.x_list[i-1], self.data.plaintext[self.index+i-1])
+            self.x_list[i] = (CRC32TAB.crc32(self.x_list[i-1], self.data.plain_text[self.index+i-1])
                 & MASK_8_32) // discard the LSB
                 | u32::from(lsb(self.x_list[i])); // set the LSB
         }
@@ -169,7 +169,7 @@ impl<'a> Attack<'a> {
 
         // compare 4 LSB(Xi) obtained from plaintext with those from the X-list
         for i in 8..=11 {
-            x = CRC32TAB.crc32(x, self.data.plaintext[self.index + i - 1]);
+            x = CRC32TAB.crc32(x, self.data.plain_text[self.index + i - 1]);
             if lsb(x) != lsb(self.x_list[i]) {
                 //println!("4");
                 return false;
@@ -179,7 +179,7 @@ impl<'a> Attack<'a> {
         // compute X3
         let mut x = self.x_list[7];
         for i in (3..=6).rev() {
-            x = CRC32TAB.crc32inv(x, self.data.plaintext[self.index + i]);
+            x = CRC32TAB.crc32inv(x, self.data.plain_text[self.index + i]);
         }
 
         // check that X3 fits with Y1[26,32)
@@ -208,7 +208,7 @@ mod tests {
     fn test_x_list() {
         let data = Data::new(&Arguments {
             encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: "file".into(),
+            cipherfile: Some("file".into()),
             plainzip: Some("./example/plain.zip".into()),
             plainfile: Some("file".into()),
             ..Default::default()
@@ -234,7 +234,7 @@ mod tests {
     fn explore_y_list() {
         let data = Data::new(&Arguments {
             encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: "file".into(),
+            cipherfile: Some("file".into()),
             plainzip: Some("./example/plain.zip".into()),
             plainfile: Some("file".into()),
             ..Default::default()
@@ -260,7 +260,7 @@ mod tests {
     fn get_keys() {
         let data = Data::new(&Arguments {
             encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: "file".into(),
+            cipherfile: Some("file".into()),
             plainzip: Some("./example/plain.zip".into()),
             plainfile: Some("file".into()),
             ..Default::default()

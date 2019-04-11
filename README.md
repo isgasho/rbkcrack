@@ -13,7 +13,7 @@ Difference from bkcrack
 Not much, except that rbkcrack supports ZIP64 file (thanks to zip-rs crate).
 
 In most cases, using bkcrack is a better choice.
-Because I haven't fully test rbkcrack, it's just a toy for practicing Rust. 
+Because I haven't fully test rbkcrack, it's just a toy for practicing Rust.
 
 Download
 --------
@@ -42,6 +42,10 @@ The larger the known plaintext, the faster the attack.
 Having a zip archive `encrypted.zip` with the entry `cipher` being the ciphertext and `plain.zip` with the entry `plain` as the known plaintext, rbkcrack can be run like this:
 
     rbkcrack -C encrypted.zip -c cipher -P plain.zip -p plain
+
+Or use `-a` option to let rbkcrack search entry automatically
+
+    rbkcrack -C encrypted.zip -P plain.zip -a
 
 #### From files
 
@@ -92,6 +96,9 @@ Contribute
 ----------
 
 Do not hesitate to suggest improvements or submit pull requests on [github](https://github.com/Aloxaf/rbkcrack).
+
+BTW, if there is any zip file which bkcrack/pkcrack can crack while rbkcrack can't,
+please don't hesitate to report it. 
 
 License
 -------

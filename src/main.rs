@@ -96,11 +96,12 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
 
 fn decipher(args: &Arguments, keys: &mut Keys) -> Result<(), Error> {
     let mut ciphersize = 0;
-    let cipherstream = if let Some(archivename) = &args.encryptedzip {
-        file::open_zip_entry(archivename, &args.cipherfile, &mut ciphersize)?
-    } else {
-        file::open_raw_file(&args.cipherfile, &mut ciphersize)?
-    };
+    let cipherstream =
+        if let (Some(archivename), Some(entryname)) = (&args.encryptedzip, &args.cipherfile) {
+            file::open_zip_entry(archivename, entryname, &mut ciphersize)?
+        } else {
+            file::open_raw_file(args.cipherfile.as_ref().unwrap(), &mut ciphersize)?
+        };
 
     let mut decipheredstream = file::open_output(args.decipheredfile.as_ref().unwrap())?;
     let keystreamtab = KeystreamTab::new();
