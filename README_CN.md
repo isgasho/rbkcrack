@@ -16,7 +16,7 @@
 
     rbkcrack -C encrypted.zip -c cipher -P plain.zip -p plain
 
-或者使用 `-a` 开关自动搜索文件
+或者使用 `-a` 开关根据 CRC32 值自动进行明文攻击
 
     rbkcrack -C encrypted.zip -P plain.zip -a
 
