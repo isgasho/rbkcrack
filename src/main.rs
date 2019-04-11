@@ -1,5 +1,5 @@
 use chrono::Local;
-use failure::{format_err, Error};
+use failure::Error;
 use flate2::write::DeflateDecoder;
 use log::debug;
 use rayon::prelude::*;
@@ -86,53 +86,48 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
         println!();
     }
 
-    // print the keys
-    if keysvec.is_empty() {
-        Err(format_err!("Could not find the keys."))
-    } else {
-        Ok(keysvec)
-    }
+    // return the keys
+    Ok(keysvec)
 }
 
 fn decipher(args: &Arguments, keys: &mut Keys) -> Result<(), Error> {
-    let mut ciphersize = 0;
-    let cipherstream =
-        if let (Some(archivename), Some(entryname)) = (&args.encryptedzip, &args.cipherfile) {
-            file::open_zip_entry(archivename, entryname, &mut ciphersize)?
+    let mut cipher_size = 0;
+    let cipher_stream =
+        if let (Some(zip_path), Some(entry_name)) = (&args.cipher_zip, &args.cipher_file) {
+            file::open_zip_entry(zip_path, entry_name, &mut cipher_size)?
         } else {
-            file::open_raw_file(args.cipherfile.as_ref().unwrap(), &mut ciphersize)?
+            file::open_raw_file(args.cipher_file.as_ref().unwrap(), &mut cipher_size)?
         };
 
-    let mut decipheredstream = file::open_output(args.decipheredfile.as_ref().unwrap())?;
+    let mut deciphered_stream = file::open_output(args.deciphered_file.as_ref().unwrap())?;
     let keystreamtab = KeystreamTab::new();
 
-    let mut cipher = cipherstream.bytes();
-    let mut i = 0;
-    while i < Data::HEADER_SIZE {
-        let p = cipher.next().unwrap().unwrap() ^ keystreamtab.get_byte(keys.get_z());
-        keys.update(p);
-        i += 1;
-    }
-
-    let mut vec = Vec::with_capacity(ciphersize - i);
     debug!("deciphering");
-    for b in cipher.take(ciphersize - i) {
-        let p: u8 = b.unwrap() ^ keystreamtab.get_byte(keys.get_z());
-        keys.update(p);
-        vec.push(p);
-    }
-    debug!("deciphered: {} bytes", vec.len());
+    let decrypted_text = cipher_stream
+        .bytes()
+        .take(cipher_size)
+        .map(|b| {
+            let p = b.unwrap() ^ keystreamtab.get_byte(keys.get_z());
+            keys.update(p);
+            p
+        })
+        .collect::<Vec<_>>();
+
+    debug!(
+        "deciphered: {} bytes",
+        decrypted_text.len() - Data::HEADER_SIZE
+    );
     if args.unzip {
         debug!("decompressing");
-        let mut deflater = DeflateDecoder::new(decipheredstream);
-        deflater.write_all(&vec)?;
+        let mut deflater = DeflateDecoder::new(deciphered_stream);
+        deflater.write_all(&decrypted_text[Data::HEADER_SIZE..])?;
     } else {
-        decipheredstream.write_all(&vec)?;
+        deciphered_stream.write_all(&decrypted_text[Data::HEADER_SIZE..])?;
     }
     Ok(())
 }
 
-fn main() {
+fn run() -> Result<(), Error> {
     env_logger::init();
 
     let args: Arguments = Arguments::from_args();
@@ -144,30 +139,33 @@ fn main() {
     if args.key.len() == 3 {
         keysvec.push(args.key.iter().cloned().collect::<Keys>());
     } else {
-        match find_keys(&args) {
-            Ok(v) => {
-                println!("[{}] Keys", now());
-                for keys in &v {
-                    println!("{}", keys);
-                }
-                keysvec.extend(v);
+        let result = find_keys(&args)?;
+        if !result.is_empty() {
+            println!("[{}] Keys", now());
+            for keys in &result {
+                println!("{}", keys);
             }
-            Err(e) => {
-                eprintln!("{}", e);
-                process::exit(1);
-            }
+            keysvec.extend(result);
+        } else {
+            eprintln!("Could not find the keys.");
+            process::exit(1);
         }
     };
 
-    if args.decipheredfile.is_some() {
+    if args.deciphered_file.is_some() {
         if keysvec.len() > 1 {
             println!("Deciphering data using the keys {}", keysvec[0]);
             println!("Use the command line option -k to provide other keys.");
         }
-        decipher(&args, &mut keysvec[0]).unwrap_or_else(|e| {
-            eprintln!("decipher error: {}", e);
-            process::exit(1);
-        });
+        decipher(&args, &mut keysvec[0])?;
         println!("Wrote deciphered text.");
+    }
+    Ok(())
+}
+
+fn main() {
+    match run() {
+        Ok(()) => (),
+        Err(e) => eprintln!("{}", e),
     }
 }

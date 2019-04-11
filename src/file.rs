@@ -4,7 +4,7 @@ use podio::ReadPodExt;
 use std::collections::HashMap;
 use std::fs::{metadata, File};
 use std::io::prelude::Seek;
-use std::io::SeekFrom;
+use std::io::{BufWriter, SeekFrom, Write};
 use zip::ZipArchive;
 
 fn load_stream(stream: &mut File, size: u64) -> Result<Vec<u8>, Error> {
@@ -28,6 +28,7 @@ pub fn auto_load_file(plain_zip: &str, cipher_zip: &str) -> Result<(Vec<u8>, Vec
     // 遍历 cipher_zip, 寻找 crc32 匹配的文件
     for i in 0..cipher_zip.len() {
         let file = cipher_zip.by_index(i).unwrap();
+
         if let Some(index) = map.get(&file.crc32()) {
             // 提前获取 data_start, compressed_size 以取悦 borrow checker
             let (data_start, plain_size) = {
@@ -39,8 +40,7 @@ pub fn auto_load_file(plain_zip: &str, cipher_zip: &str) -> Result<(Vec<u8>, Vec
             plain.seek(SeekFrom::Start(data_start))?;
 
             // 此处因为 file 定义在外层, 只能主动 drop 以通过 borrow check
-            let data_start = file.data_start();
-            let cipher_size = file.compressed_size();
+            let (data_start, cipher_size) = (file.data_start(), file.compressed_size());
             println!("Found cipher: {}", file.name());
             drop(file);
             let mut cipher = cipher_zip.into_inner();
@@ -55,28 +55,30 @@ pub fn auto_load_file(plain_zip: &str, cipher_zip: &str) -> Result<(Vec<u8>, Vec
     Err(format_err!("could not find matched files"))
 }
 
-pub fn open_raw_file(filename: &str, size: &mut usize) -> Result<File, Error> {
-    let file = File::open(filename)?;
-    let meta = metadata(filename)?;
+/// 打开一个包含密文/明文的文件
+pub fn open_raw_file(path: &str, size: &mut usize) -> Result<File, Error> {
+    let file = File::open(path)?;
+    let meta = metadata(path)?;
     *size = meta.len() as usize;
     Ok(file)
 }
 
-pub fn load_raw_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
+/// 读取一个包含密文/明文的文件
+pub fn read_raw_file(path: &str, size: usize) -> Result<Vec<u8>, Error> {
     let mut real_size = 0;
-    let mut file = open_raw_file(filename, &mut real_size)?;
+    let mut file = open_raw_file(path, &mut real_size)?;
     let bytes = load_stream(&mut file, size.min(real_size) as u64)?;
     Ok(bytes)
 }
 
-pub fn open_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> Result<File, Error> {
-    let archive = File::open(archivename)?;
-    debug!("loading {}", archivename);
-    let mut zip = ZipArchive::new(archive)?;
-    debug!("searching {}", entryname);
+/// 打开一个 zip 文件, 从中获取包含密文/明文的条目
+pub fn open_zip_entry(path: &str, entry_name: &str, size: &mut usize) -> Result<File, Error> {
+    debug!("loading {}", path);
+    let mut zip = ZipArchive::new(File::open(path)?)?;
+    debug!("searching {}", entry_name);
 
     let data_start = {
-        let zip_file = zip.by_name(entryname)?;
+        let zip_file = zip.by_name(entry_name)?;
         *size = zip_file.compressed_size() as usize;
         zip_file.data_start()
     };
@@ -88,13 +90,14 @@ pub fn open_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> R
     Ok(reader)
 }
 
-pub fn load_zip_entry(archivename: &str, entryname: &str, size: usize) -> Result<Vec<u8>, Error> {
+/// 读取一个包含密文/明文的 zip 文件的条目
+pub fn read_zip_entry(path: &str, entry_name: &str, size: usize) -> Result<Vec<u8>, Error> {
     let mut real_size = 0;
-    let mut file = open_zip_entry(archivename, entryname, &mut real_size)?;
+    let mut file = open_zip_entry(path, entry_name, &mut real_size)?;
     let bytes = load_stream(&mut file, size.min(real_size) as u64)?;
     Ok(bytes)
 }
 
-pub fn open_output(filename: &str) -> Result<File, Error> {
-    Ok(File::create(filename)?)
+pub fn open_output(path: &str) -> Result<impl Write, Error> {
+    Ok(BufWriter::new(File::create(path)?))
 }

@@ -75,16 +75,19 @@ impl Keys {
     }
 
     /// return X value
+    #[inline]
     pub fn get_x(&self) -> u32 {
         self.x
     }
 
     /// return Y value
+    #[inline]
     pub fn get_y(&self) -> u32 {
         self.y
     }
 
     /// return Z value
+    #[inline]
     pub fn get_z(&self) -> u32 {
         self.z
     }

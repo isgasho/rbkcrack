@@ -207,10 +207,10 @@ mod tests {
     #[test]
     fn test_x_list() {
         let data = Data::new(&Arguments {
-            encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: Some("file".into()),
-            plainzip: Some("./example/plain.zip".into()),
-            plainfile: Some("file".into()),
+            cipher_zip: Some("./example/cipher.zip".into()),
+            cipher_file: Some("file".into()),
+            plain_zip: Some("./example/plain.zip".into()),
+            plain_file: Some("file".into()),
             ..Default::default()
         })
         .unwrap();
@@ -233,10 +233,10 @@ mod tests {
     #[test]
     fn explore_y_list() {
         let data = Data::new(&Arguments {
-            encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: Some("file".into()),
-            plainzip: Some("./example/plain.zip".into()),
-            plainfile: Some("file".into()),
+            cipher_zip: Some("./example/cipher.zip".into()),
+            cipher_file: Some("file".into()),
+            plain_zip: Some("./example/plain.zip".into()),
+            plain_file: Some("file".into()),
             ..Default::default()
         })
         .unwrap();
@@ -259,10 +259,10 @@ mod tests {
     #[test]
     fn get_keys() {
         let data = Data::new(&Arguments {
-            encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: Some("file".into()),
-            plainzip: Some("./example/plain.zip".into()),
-            plainfile: Some("file".into()),
+            cipher_zip: Some("./example/cipher.zip".into()),
+            cipher_file: Some("file".into()),
+            plain_zip: Some("./example/plain.zip".into()),
+            plain_file: Some("file".into()),
             ..Default::default()
         })
         .unwrap();

@@ -29,7 +29,7 @@ fn parse_hex(src: &str) -> Result<u32, ParseIntError> {
 pub struct Arguments {
     /// File containing the ciphertext
     #[structopt(short = "c", required_unless = "auto", allow_hyphen_values = true)]
-    pub cipherfile: Option<String>,
+    pub cipher_file: Option<String>,
 
     /// File containing the known plaintext
     #[structopt(
@@ -37,19 +37,19 @@ pub struct Arguments {
         raw(required_unless_one = r#"&["key", "auto"]"#),
         allow_hyphen_values = true
     )]
-    pub plainfile: Option<String>,
+    pub plain_file: Option<String>,
 
     /// Internal password representation as three 32-bits integers in hexadecimal (requires -d)
     #[structopt(short = "k", parse(try_from_str = "parse_hex"))]
     pub key: Vec<u32>,
 
-    /// Zip archive containing cipherfile
+    /// Zip archive containing cipher_file
     #[structopt(short = "C")]
-    pub encryptedzip: Option<String>,
+    pub cipher_zip: Option<String>,
 
-    /// Zip archive containing plainfile
+    /// Zip archive containing plain_file
     #[structopt(short = "P")]
-    pub plainzip: Option<String>,
+    pub plain_zip: Option<String>,
 
     /// Known plaintext offset relative to ciphertext without encryption header (may be negative)
     #[structopt(short = "o", allow_hyphen_values = true)]
@@ -57,7 +57,7 @@ pub struct Arguments {
 
     /// Maximum number of bytes of plaintext to read
     #[structopt(short = "t")]
-    pub plainsize: Option<usize>,
+    pub plain_size: Option<usize>,
 
     /// Exhaustively try all the keys remaining after Z reduction
     #[structopt(short = "e")]
@@ -65,7 +65,7 @@ pub struct Arguments {
 
     /// File to write the deciphered text
     #[structopt(short = "d")]
-    pub decipheredfile: Option<String>,
+    pub deciphered_file: Option<String>,
 
     /// Not only decipher but also unzip
     #[structopt(short = "u")]
@@ -95,10 +95,10 @@ mod tests {
     #[ignore]
     fn crack() {
         let data = Data::new(&Arguments {
-            encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: Some("file".into()),
-            plainzip: Some("./example/plain.zip".into()),
-            plainfile: Some("file".into()),
+            cipher_zip: Some("./example/cipher.zip".into()),
+            cipher_file: Some("file".into()),
+            plain_zip: Some("./example/plain.zip".into()),
+            plain_file: Some("file".into()),
             ..Default::default()
         })
         .unwrap();

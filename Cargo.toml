@@ -1,6 +1,6 @@
 [package]
 name = "rbkcrack"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Aloxaf <bailong104@gmail.com>"]
 description = "Crack legacy zip encryption with Biham and Kocher's known plaintext attack."
 documentation = "https://github.com/Aloxaf/rbkcrack"
@@ -11,13 +11,13 @@ license = "zlib"
 edition = "2018"
 
 [dependencies]
-failure = "0.1.2"
 chrono = "0.4.6"
-zip = { git = " https://github.com/Aloxaf/zip-rs/", branch = "rbkcrack" }
-log = "0.4.5"
 env_logger = "0.5.13"
-flate2 = "1.0.2"
+failure = "0.1.2"
+lazy_static = "1.1.0"
+flate2 = "1.0"
+log = "0.4.5"
 podio = "0.1.6"
 rayon = "1.0.2"
 structopt = "0.2"
-lazy_static = "1.1.0"
+zip = { git = " https://github.com/Aloxaf/zip-rs/", branch = "rbkcrack" }

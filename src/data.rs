@@ -26,12 +26,12 @@ impl Data {
         let mut cipher_text;
 
         if args.auto {
-            let (_1, _2) = auto_load_file(
-                args.plainzip.as_ref().unwrap(),
-                args.encryptedzip.as_ref().unwrap(),
+            let (a, b) = auto_load_file(
+                args.plain_zip.as_ref().unwrap(),
+                args.cipher_zip.as_ref().unwrap(),
             )?;
-            plain_text = _1;
-            cipher_text = _2;
+            plain_text = a;
+            cipher_text = b;
         } else {
             // load known plaintext
             plain_text = Self::load_plain(args)?;
@@ -56,17 +56,17 @@ impl Data {
 
     /// load known plaintext
     fn load_plain(args: &Arguments) -> Result<Vec<u8>, Error> {
-        let plain_size = args.plainsize.unwrap_or(std::usize::MAX);
+        let plain_size = args.plain_size.unwrap_or(std::usize::MAX);
 
         let plain_text =
-            if let (Some(archivename), Some(entryname)) = (&args.plainzip, &args.plainfile) {
-                load_zip_entry(archivename, entryname, plain_size)?
+            if let (Some(zip_path), Some(entry_name)) = (&args.plain_zip, &args.plain_file) {
+                read_zip_entry(zip_path, entry_name, plain_size)?
             } else {
-                load_raw_file(args.plainfile.as_ref().unwrap(), plain_size)?
+                read_raw_file(args.plain_file.as_ref().unwrap(), plain_size)?
             };
         debug!(
             "loaded plain {}, size {}",
-            args.plainfile.as_ref().unwrap(),
+            args.plain_file.as_ref().unwrap(),
             plain_text.len()
         );
         // check that plaintext is big enough
@@ -81,14 +81,14 @@ impl Data {
         let offset = args.offset.unwrap_or(0);
         let to_read = Data::HEADER_SIZE + offset as usize + plain_text.len();
         let cipher_text =
-            if let (Some(archivename), Some(entryname)) = (&args.encryptedzip, &args.cipherfile) {
-                load_zip_entry(archivename, entryname, to_read)?
+            if let (Some(zip_path), Some(entry_name)) = (&args.cipher_zip, &args.cipher_file) {
+                read_zip_entry(zip_path, entry_name, to_read)?
             } else {
-                load_raw_file(&args.cipherfile.as_ref().unwrap(), to_read)?
+                read_raw_file(&args.cipher_file.as_ref().unwrap(), to_read)?
             };
         debug!(
             "loaded cipher {}, size {}",
-            args.cipherfile.as_ref().unwrap(),
+            args.cipher_file.as_ref().unwrap(),
             cipher_text.len()
         );
 
