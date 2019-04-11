@@ -47,15 +47,15 @@ impl<'a> Zreduction<'a> {
     pub fn reduce(&mut self) {
         // variables to keep track of the smallest Zi[2,32) vector
         let mut tracking = false;
-        let mut best_copy = Vec::new();
+        let mut best_copy = Vec::with_capacity(1 << 16);
         let (mut best_index, mut best_size) = (0usize, Zreduction::TRACK_SIZE);
 
         // variables to wait for a limited number of steps when a small enough vector is found
         let mut waiting = false;
         let mut wait = 0usize;
 
-        let mut zim1_10_32_vector = Vec::new();
-        let mut zim1_2_32_vector = Vec::new();
+        let mut zim1_10_32_vector = Vec::with_capacity(1 << 16);
+        let mut zim1_2_32_vector = Vec::with_capacity(1 << 16);
 
         for i in (Attack::SIZE..self.index).rev() {
             zim1_10_32_vector.clear();
@@ -72,7 +72,13 @@ impl<'a> Zreduction<'a> {
             }
 
             // remove duplicates
-            zim1_10_32_vector.par_sort_unstable();
+            if zim1_10_32_vector.len() >= (1 << 12) {
+                // 如果 Vec 本身不大, 并行排序可能反而降低效率
+                zim1_10_32_vector.par_sort_unstable();
+            } else {
+                zim1_10_32_vector.sort_unstable();
+            }
+
             zim1_10_32_vector.dedup();
 
             // complete Z{i-1}[10,32) values up to Z{i-1}[2,32)
