@@ -27,16 +27,18 @@ pub fn load_raw_file(filename: &str, size: usize) -> Result<Vec<u8>, Error> {
 pub fn open_zip_entry(archivename: &str, entryname: &str, size: &mut usize) -> Result<File, Error> {
     let archive = File::open(archivename)?;
     debug!("loading {}", archivename);
-    let zip = ZipArchive::new(archive, true)?;
+    let mut zip = ZipArchive::new(archive)?;
     debug!("searching {}", entryname);
-    let data = zip.by_name_meta(entryname)?;
 
-    let archive = File::open(archivename)?;
-    let zip = ZipArchive::new(archive, true)?;
+    let data_start = {
+        let zip_file = zip.by_name(entryname)?;
+        *size = zip_file.compressed_size() as usize;
+        zip_file.data_start()
+    };
+
     let mut reader = zip.into_inner();
+    reader.seek(SeekFrom::Start(data_start))?;
 
-    reader.seek(SeekFrom::Start(data.data_start))?;
-    *size = data.compressed_size as usize;
     debug!("Found! size: {}", size);
     Ok(reader)
 }
