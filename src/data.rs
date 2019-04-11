@@ -6,8 +6,8 @@ use log::debug;
 
 #[derive(Debug, Clone)]
 pub struct Data {
-    pub ciphertext: Vec<u8>,
-    pub plaintext: Vec<u8>,
+    pub cipher_text: Vec<u8>,
+    pub plain_text: Vec<u8>,
     pub keystream: Vec<u8>,
     pub offset: i32,
 }
@@ -17,61 +17,87 @@ impl Data {
 
     pub fn new(args: &Arguments) -> Result<Data, Error> {
         let offset = args.offset.unwrap_or(0);
-        let plainsize = args.plainsize.unwrap_or(std::usize::MAX);
-
         // check that offset is not too small
         if Data::HEADER_SIZE as i32 + offset < 0 {
             return Err(format_err!("offset is too small"));
         }
 
-        // load known plaintext
-        let plaintext =
+        let mut plain_text;
+        let mut cipher_text;
+
+        if args.auto {
+            let (_1, _2) = auto_load_file(
+                args.plainzip.as_ref().unwrap(),
+                args.encryptedzip.as_ref().unwrap(),
+            )?;
+            plain_text = _1;
+            cipher_text = _2;
+        } else {
+            // load known plaintext
+            plain_text = Self::load_plain(args)?;
+
+            // load ciphertext needed by the attack
+            cipher_text = Self::load_cipher(args, &plain_text)?;
+        }
+
+        // compute keystream
+        let keystream = plain_text
+            .iter()
+            .zip(cipher_text.iter().skip(Data::HEADER_SIZE + offset as usize))
+            .map(|(x, y)| x ^ y)
+            .collect();
+        Ok(Data {
+            cipher_text,
+            plain_text,
+            keystream,
+            offset,
+        })
+    }
+
+    /// load known plaintext
+    fn load_plain(args: &Arguments) -> Result<Vec<u8>, Error> {
+        let plain_size = args.plainsize.unwrap_or(std::usize::MAX);
+
+        let plain_text =
             if let (Some(archivename), Some(entryname)) = (&args.plainzip, &args.plainfile) {
-                load_zip_entry(archivename, entryname, plainsize)?
+                load_zip_entry(archivename, entryname, plain_size)?
             } else {
-                load_raw_file(args.plainfile.as_ref().unwrap(), plainsize)?
+                load_raw_file(args.plainfile.as_ref().unwrap(), plain_size)?
             };
         debug!(
             "loaded plain {}, size {}",
             args.plainfile.as_ref().unwrap(),
-            plaintext.len()
+            plain_text.len()
         );
         // check that plaintext is big enough
-        if plaintext.len() < Attack::SIZE {
+        if plain_text.len() < Attack::SIZE {
             return Err(format_err!("plaintext is too small"));
         }
+        Ok(plain_text)
+    }
 
-        // load ciphertext needed by the attack
-        let to_read = Data::HEADER_SIZE + offset as usize + plaintext.len();
-        let ciphertext = if let Some(archivename) = &args.encryptedzip {
-            load_zip_entry(archivename, &args.cipherfile, to_read)?
-        } else {
-            load_raw_file(&args.cipherfile, to_read)?
-        };
+    /// load ciphertext needed by the attack
+    fn load_cipher(args: &Arguments, plain_text: &[u8]) -> Result<Vec<u8>, Error> {
+        let offset = args.offset.unwrap_or(0);
+        let to_read = Data::HEADER_SIZE + offset as usize + plain_text.len();
+        let cipher_text =
+            if let (Some(archivename), Some(entryname)) = (&args.encryptedzip, &args.cipherfile) {
+                load_zip_entry(archivename, entryname, to_read)?
+            } else {
+                load_raw_file(&args.cipherfile.as_ref().unwrap(), to_read)?
+            };
         debug!(
             "loaded cipher {}, size {}",
-            args.cipherfile,
-            ciphertext.len()
+            args.cipherfile.as_ref().unwrap(),
+            cipher_text.len()
         );
 
         // check that ciphertext is valid
-        if plaintext.len() > ciphertext.len() {
+        if plain_text.len() > cipher_text.len() {
             return Err(format_err!("ciphertext is smaller than plaintext"));
-        } else if Data::HEADER_SIZE + offset as usize + plaintext.len() > ciphertext.len() {
+        } else if Data::HEADER_SIZE + offset as usize + plain_text.len() > cipher_text.len() {
             return Err(format_err!("offset is too large"));
         }
-
-        // compute keystream
-        let keystream = plaintext
-            .iter()
-            .zip(ciphertext.iter().skip(Data::HEADER_SIZE + offset as usize))
-            .map(|(x, y)| x ^ y)
-            .collect();
-        Ok(Data {
-            ciphertext,
-            plaintext,
-            keystream,
-            offset,
-        })
+        Ok(cipher_text)
     }
 }

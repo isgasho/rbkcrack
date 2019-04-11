@@ -16,6 +16,10 @@
 
     rbkcrack -C encrypted.zip -c cipher -P plain.zip -p plain
 
+或者使用 `-a` 开关自动搜索文件
+
+    rbkcrack -C encrypted.zip -P plain.zip -a
+
 #### 攻击原始数据(?)
 
 已知:
@@ -55,3 +59,10 @@
 **[推荐]** 如果想解压整个文件的话, 可以使用这个改造过的可以用 keys 解压的 [p7zip](https://github.com/Aloxaf/p7zip):
 
     7za e cipher.zip '-p[d4f34b9d_a6ba3461_dcd97451]'
+
+贡献    
+---
+
+欢迎 PR
+
+顺便, 如果有啥 rbkcrack 破解不了的 zip 文件的话, 欢迎提 issue

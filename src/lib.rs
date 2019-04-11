@@ -28,11 +28,15 @@ fn parse_hex(src: &str) -> Result<u32, ParseIntError> {
 #[structopt(name = "rbkcrack")]
 pub struct Arguments {
     /// File containing the ciphertext
-    #[structopt(short = "c", allow_hyphen_values = true)]
-    pub cipherfile: String,
+    #[structopt(short = "c", required_unless = "auto", allow_hyphen_values = true)]
+    pub cipherfile: Option<String>,
 
     /// File containing the known plaintext
-    #[structopt(short = "p", required_unless = "key", allow_hyphen_values = true)]
+    #[structopt(
+        short = "p",
+        raw(required_unless_one = r#"&["key", "auto"]"#),
+        allow_hyphen_values = true
+    )]
     pub plainfile: Option<String>,
 
     /// Internal password representation as three 32-bits integers in hexadecimal (requires -d)
@@ -63,9 +67,13 @@ pub struct Arguments {
     #[structopt(short = "d")]
     pub decipheredfile: Option<String>,
 
-    /// not only decipher but also unzip
+    /// Not only decipher but also unzip
     #[structopt(short = "u")]
     pub unzip: bool,
+
+    /// Find entry by CRC32 automatically
+    #[structopt(short = "a")]
+    pub auto: bool,
 }
 
 #[inline]
@@ -88,7 +96,7 @@ mod tests {
     fn crack() {
         let data = Data::new(&Arguments {
             encryptedzip: Some("./example/cipher.zip".into()),
-            cipherfile: "file".into(),
+            cipherfile: Some("file".into()),
             plainzip: Some("./example/plain.zip".into()),
             plainfile: Some("file".into()),
             ..Default::default()
