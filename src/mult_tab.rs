@@ -1,4 +1,9 @@
 use crate::utils::*;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref MULTTAB: MultTab = MultTab::new();
+}
 
 /// Lookup tables for multiplication related computations
 pub struct MultTab {

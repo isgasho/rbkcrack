@@ -1,7 +1,9 @@
+#[inline]
 pub fn lsb(x: u32) -> u8 {
     x as u8
 }
 
+#[inline]
 pub fn msb(x: u32) -> u8 {
     (x >> 24) as u8
 }

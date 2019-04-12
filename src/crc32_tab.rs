@@ -1,4 +1,9 @@
 use crate::utils::*;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref CRC32TAB: Crc32Tab = Crc32Tab::new();
+}
 
 /// Lookup tables for CRC32 related computations
 pub struct Crc32Tab {
@@ -9,7 +14,6 @@ pub struct Crc32Tab {
 impl Crc32Tab {
     const CRCPOL: u32 = 0xedb8_8320;
 
-    // TODO: CrcTab 应该是个"常量"?
     pub fn new() -> Crc32Tab {
         let mut crc32tab = Crc32Tab {
             crctab: [0; 256],

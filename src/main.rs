@@ -3,13 +3,14 @@ use failure::Error;
 use flate2::write::DeflateDecoder;
 use log::debug;
 use rayon::prelude::*;
-use rbkcrack::{file, progress, Arguments, Attack, Data, Keys, KeystreamTab, Zreduction};
+use rbkcrack::{file, progress, Arguments, Attack, Data, Keys, Zreduction, KEYSTREAMTAB};
 use structopt::StructOpt;
 
 use std::io::prelude::*;
 use std::io::stdout;
 use std::process;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, RwLock};
 
 fn now() -> String {
     Local::now().format("%T").to_string()
@@ -36,7 +37,7 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
 
     // iterate over remaining Zi[2,32) values
     let attack = Attack::new(&data, zr.get_index() + 1 - Attack::SIZE);
-    let done = Arc::new(Mutex::new(0));
+    let done = Arc::new(AtomicUsize::new(1));
     let should_stop = Arc::new(RwLock::new(false));
     let size = zr.size();
     println!(
@@ -46,41 +47,35 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
         data.offset + zr.get_index() as i32
     );
 
-    let keysvec = zr
-        .get_zi_2_32_vector()
-        // 将任务每 1000 个分为一组, 每组再并行检测
-        // 保证顺序大抵是从小到大的
-        .chunks(1000)
-        .map(|chunk| {
-            chunk
-                .into_par_iter()
-                .filter_map(|&z| {
-                    if *should_stop.read().unwrap() {
-                        return None;
-                    }
+    let mut keysvec = vec![];
 
-                    *done.lock().unwrap() += 1;
-                    progress(*done.lock().unwrap(), size);
-                    stdout().flush().unwrap();
+    // 将任务每 1000 个分为一组, 每组再并行检测
+    // 保证顺序大抵是从小到大的
+    for chunk in zr.get_zi_2_32_vector().chunks(1000) {
+        let tmp = chunk.into_par_iter().filter_map(|&z| {
+            if *should_stop.read().unwrap() {
+                return None;
+            }
 
-                    let mut attack = attack.clone();
-                    if attack.carry_out(z) {
-                        let possible_keys = attack.get_keys();
+            progress(done.fetch_add(1, Ordering::SeqCst), size);
+            stdout().flush().unwrap();
 
-                        if args.exhaustive {
-                            println!("\rKeys: {}", possible_keys);
-                        } else {
-                            *should_stop.write().unwrap() = true;
-                        }
-                        Some(possible_keys)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<Keys>>()
-        })
-        .flatten()
-        .collect::<Vec<_>>();
+            let mut attack = attack.clone();
+            if attack.carry_out(z) {
+                let possible_keys = attack.get_keys();
+
+                if args.exhaustive {
+                    println!("\rKeys: {}", possible_keys);
+                } else {
+                    *should_stop.write().unwrap() = true;
+                }
+                Some(possible_keys)
+            } else {
+                None
+            }
+        });
+        keysvec.par_extend(tmp);
+    }
 
     if size != 0 {
         println!();
@@ -100,14 +95,13 @@ fn decipher(args: &Arguments, keys: &mut Keys) -> Result<(), Error> {
         };
 
     let mut deciphered_stream = file::open_output(args.deciphered_file.as_ref().unwrap())?;
-    let keystreamtab = KeystreamTab::new();
 
     debug!("deciphering");
     let decrypted_text = cipher_stream
         .bytes()
         .take(cipher_size)
         .map(|b| {
-            let p = b.unwrap() ^ keystreamtab.get_byte(keys.get_z());
+            let p = b.unwrap() ^ KEYSTREAMTAB.get_byte(keys.get_z());
             keys.update(p);
             p
         })

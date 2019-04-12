@@ -1,10 +1,9 @@
-use crate::crc32_tab::Crc32Tab;
+use crate::crc32_tab::CRC32TAB;
 use crate::data::Data;
 use crate::keys::Keys;
-use crate::keystream_tab::KeystreamTab;
-use crate::mult_tab::MultTab;
+use crate::keystream_tab::KEYSTREAMTAB;
+use crate::mult_tab::{MultTab, MULTTAB};
 use crate::utils::*;
-use lazy_static::lazy_static;
 
 #[derive(Debug, Clone)]
 pub struct Attack<'a> {
@@ -13,12 +12,6 @@ pub struct Attack<'a> {
     x_list: [u32; 12],
     data: &'a Data,
     index: usize,
-}
-
-lazy_static! {
-    static ref MULTTAB: MultTab = MultTab::new();
-    static ref CRC32TAB: Crc32Tab = Crc32Tab::new();
-    static ref KEYSTREAMTAB: KeystreamTab = KeystreamTab::new();
 }
 
 impl<'a> Attack<'a> {

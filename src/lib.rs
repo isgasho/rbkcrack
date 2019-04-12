@@ -5,7 +5,7 @@ use structopt::StructOpt;
 pub use crate::attack::Attack;
 pub use crate::data::Data;
 pub use crate::keys::Keys;
-pub use crate::keystream_tab::KeystreamTab;
+pub use crate::keystream_tab::KEYSTREAMTAB;
 pub use crate::zreduction::Zreduction;
 use std::num::ParseIntError;
 

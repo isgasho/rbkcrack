@@ -1,8 +1,7 @@
 use crate::attack::Attack;
-use crate::crc32_tab::Crc32Tab;
-use crate::keystream_tab::KeystreamTab;
+use crate::crc32_tab::CRC32TAB;
+use crate::keystream_tab::KEYSTREAMTAB;
 use crate::progress;
-use lazy_static::lazy_static;
 use rayon::prelude::*;
 use std::mem;
 
@@ -10,11 +9,6 @@ pub struct Zreduction<'a> {
     keystream: &'a [u8],
     zi_2_32_vector: Vec<u32>,
     index: usize,
-}
-
-lazy_static! {
-    static ref KEYSTREAMTAB: KeystreamTab = KeystreamTab::new();
-    static ref CRC32TAB: Crc32Tab = Crc32Tab::new();
 }
 
 impl<'a> Zreduction<'a> {

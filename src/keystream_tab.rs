@@ -1,4 +1,9 @@
 use crate::utils::*;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref KEYSTREAMTAB: KeystreamTab = KeystreamTab::new();
+}
 
 /// Lookup tables for keystream related computations
 pub struct KeystreamTab {
