@@ -86,22 +86,20 @@ fn find_keys(args: &Arguments) -> Result<Vec<Keys>, Error> {
 }
 
 fn decipher(args: &Arguments, keys: &mut Keys) -> Result<(), Error> {
-    let mut cipher_size = 0;
-    let cipher_stream =
+    let cipher_text =
         if let (Some(zip_path), Some(entry_name)) = (&args.cipher_zip, &args.cipher_file) {
-            file::open_zip_entry(zip_path, entry_name, &mut cipher_size)?
+            file::read_zip_entry(zip_path, entry_name, std::usize::MAX)?
         } else {
-            file::open_raw_file(args.cipher_file.as_ref().unwrap(), &mut cipher_size)?
+            file::read_raw_file(args.cipher_file.as_ref().unwrap(), std::usize::MAX)?
         };
 
     let mut deciphered_stream = file::open_output(args.deciphered_file.as_ref().unwrap())?;
 
     debug!("deciphering");
-    let decrypted_text = cipher_stream
-        .bytes()
-        .take(cipher_size)
+    let decrypted_text = cipher_text
+        .into_iter()
         .map(|b| {
-            let p = b.unwrap() ^ KEYSTREAMTAB.get_byte(keys.get_z());
+            let p = b ^ KEYSTREAMTAB.get_byte(keys.get_z());
             keys.update(p);
             p
         })

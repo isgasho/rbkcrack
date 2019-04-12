@@ -7,10 +7,6 @@ use std::io::prelude::Seek;
 use std::io::{BufWriter, SeekFrom, Write};
 use zip::ZipArchive;
 
-fn load_stream(stream: &mut File, size: u64) -> Result<Vec<u8>, Error> {
-    Ok(stream.read_exact(size as usize)?)
-}
-
 /// 自动根据 CRC32 值寻找匹配的文件
 pub fn auto_load_file(plain_zip: &str, cipher_zip: &str) -> Result<(Vec<u8>, Vec<u8>), Error> {
     println!("Searching automatically...");
@@ -55,47 +51,32 @@ pub fn auto_load_file(plain_zip: &str, cipher_zip: &str) -> Result<(Vec<u8>, Vec
     Err(format_err!("could not find matched files"))
 }
 
-/// 打开一个包含密文/明文的文件
-pub fn open_raw_file(path: &str, size: &mut usize) -> Result<File, Error> {
-    let file = File::open(path)?;
-    let meta = metadata(path)?;
-    *size = meta.len() as usize;
-    Ok(file)
-}
-
 /// 读取一个包含密文/明文的文件
 pub fn read_raw_file(path: &str, size: usize) -> Result<Vec<u8>, Error> {
-    let mut real_size = 0;
-    let mut file = open_raw_file(path, &mut real_size)?;
-    let bytes = load_stream(&mut file, size.min(real_size) as u64)?;
-    Ok(bytes)
+    let mut file = File::open(path)?;
+    let meta = metadata(path)?;
+    Ok(file.read_exact(size.min(meta.len() as usize))?)
 }
 
-/// 打开一个 zip 文件, 从中获取包含密文/明文的条目
-pub fn open_zip_entry(path: &str, entry_name: &str, size: &mut usize) -> Result<File, Error> {
+/// 读取一个包含密文/明文的 zip 文件的条目
+pub fn read_zip_entry(path: &str, entry_name: &str, size: usize) -> Result<Vec<u8>, Error> {
     debug!("loading {}", path);
     let mut zip = ZipArchive::new(File::open(path)?)?;
-    debug!("searching {}", entry_name);
 
-    let data_start = {
-        let zip_file = zip.by_name(entry_name)?;
-        *size = zip_file.compressed_size() as usize;
-        zip_file.data_start()
-    };
+    debug!("searching {}", entry_name);
+    let zip_file = zip.by_name(entry_name)?;
+
+    let data_start = zip_file.data_start();
+    let real_size = zip_file.compressed_size() as usize;
+
+    drop(zip_file);
 
     let mut reader = zip.into_inner();
     reader.seek(SeekFrom::Start(data_start))?;
 
     debug!("Found! size: {}", size);
-    Ok(reader)
-}
 
-/// 读取一个包含密文/明文的 zip 文件的条目
-pub fn read_zip_entry(path: &str, entry_name: &str, size: usize) -> Result<Vec<u8>, Error> {
-    let mut real_size = 0;
-    let mut file = open_zip_entry(path, entry_name, &mut real_size)?;
-    let bytes = load_stream(&mut file, size.min(real_size) as u64)?;
-    Ok(bytes)
+    Ok(reader.read_exact(size.min(real_size))?)
 }
 
 pub fn open_output(path: &str) -> Result<impl Write, Error> {
